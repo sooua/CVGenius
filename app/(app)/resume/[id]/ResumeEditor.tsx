@@ -1580,7 +1580,7 @@ function Section({
 }) {
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 className="font-serif text-[20px] text-near-black">{title}</h2>
         {actions}
       </div>
@@ -1695,7 +1695,7 @@ function MatchPanel({
   onDismiss: () => void;
 }) {
   return (
-    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
+    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <p className="overline mb-1.5">岗位匹配</p>
@@ -1995,7 +1995,7 @@ function CoverLetterPanel({
   };
 
   return (
-    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
+    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <p className="overline mb-1.5">求职信</p>
@@ -2335,7 +2335,7 @@ function TemplatePanel({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {RESUME_TEMPLATES.map((tpl) => {
           const active = tpl.id === template;
           return (
@@ -2722,7 +2722,7 @@ function InterviewPanel({
   onDismiss: () => void;
 }) {
   return (
-    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
+    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <p className="overline mb-1.5">面试题预测</p>
@@ -2916,7 +2916,7 @@ function CheckupPanel({
   onRerun: () => void;
 }) {
   return (
-    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
+    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <p className="overline mb-1.5">AI 体检报告</p>
