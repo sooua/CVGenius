@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "brand": "FirstCV · 札记",
+    "accountTitle": "账户设置",
+    "signOut": "退出"
+  },
+  "login": {
+    "metaTitle": "登录",
+    "brand": "FirstCV · 札记",
+    "overline": "Magic Link · 一次性登录",
+    "title": "先写下你的邮箱",
+    "intro": "我们会把登录链接发到你的邮箱，点开就能进来。不用记密码，也不留把柄。",
+    "consent": "继续即表示你同意我们不会把你的简历卖给别人。",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "you@example.com",
+    "send": "发送登录链接",
+    "sending": "正在发送…",
+    "sentTitle": "登录链接已发出",
+    "sentBody": "查收 <b>{email}</b>，点击邮件里的链接即可进入 FirstCV。链接 1 小时内有效。",
+    "resend": "没收到？重新发送",
+    "resendIn": "{seconds}s 后可重发",
+    "resending": "重新发送中…",
+    "checkSpam": "也记得看看垃圾邮件箱"
+  }
+}

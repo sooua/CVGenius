@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { signOut } from "@/app/actions/auth";
 
@@ -8,6 +9,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const t = await getTranslations("nav");
 
   return (
     <div className="min-h-screen bg-parchment">
@@ -17,14 +19,14 @@ export default async function AppLayout({
           className="flex items-center gap-2 md:gap-2.5 text-near-black min-w-0"
         >
           <span className="w-5 h-5 rounded-full bg-terracotta shrink-0" />
-          <span className="font-serif text-[15px] truncate">FirstCV · 札记</span>
+          <span className="font-serif text-[15px] truncate">{t("brand")}</span>
         </Link>
 
         <div className="flex items-center gap-3 md:gap-5 text-[13px] min-w-0">
           <Link
             href="/account"
             className="text-olive-gray hover:text-near-black transition hidden sm:inline truncate max-w-[180px]"
-            title="账户设置"
+            title={t("accountTitle")}
           >
             {user.displayName ?? user.email}
           </Link>
@@ -33,7 +35,7 @@ export default async function AppLayout({
               type="submit"
               className="rounded-lg bg-warm-sand px-3 py-1.5 text-charcoal-warm hover:bg-border-cream transition shrink-0"
             >
-              退出
+              {t("signOut")}
             </button>
           </form>
         </div>

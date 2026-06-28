@@ -156,7 +156,7 @@ function LocaleField({ initial }: { initial: string }) {
           className="flex-1 rounded-xl bg-white ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black focus:outline-none focus:ring-2 focus:ring-terracotta transition"
         >
           <option value="zh-CN">简体中文</option>
-          <option value="en-US">English（开发中）</option>
+          <option value="en-US">English</option>
         </select>
         <button
           type="submit"

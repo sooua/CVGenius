@@ -4,9 +4,11 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { users } from "@/db/schema/users";
 import { verifySession } from "@/lib/auth/dal";
+import { LOCALE_COOKIE, toMessageLocale } from "@/lib/i18n/request";
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { resolvePaymentProvider } from "@/services/payment";
@@ -87,8 +89,14 @@ export async function updateLocale(
     .set({ locale: raw, updatedAt: new Date() })
     .where(eq(users.id, userId));
 
-  revalidatePath("/account");
-  revalidatePath("/dashboard");
+  // The message locale is read from this cookie by lib/i18n/request.ts.
+  (await cookies()).set(LOCALE_COOKIE, toMessageLocale(raw), {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+  });
+
+  revalidatePath("/", "layout");
   return { ok: true, message: "已切换" };
 }
 

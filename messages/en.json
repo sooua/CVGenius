@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "brand": "FirstCV",
+    "accountTitle": "Account settings",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "metaTitle": "Sign in",
+    "brand": "FirstCV",
+    "overline": "Magic link · passwordless",
+    "title": "Start with your email",
+    "intro": "We'll send a sign-in link to your inbox — one click and you're in. No password to remember.",
+    "consent": "By continuing, you agree we'll never sell your resume to anyone.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "send": "Send sign-in link",
+    "sending": "Sending…",
+    "sentTitle": "Sign-in link sent",
+    "sentBody": "Check <b>{email}</b> and click the link to enter FirstCV. It's valid for 1 hour.",
+    "resend": "Didn't get it? Resend",
+    "resendIn": "Resend in {seconds}s",
+    "resending": "Resending…",
+    "checkSpam": "Check your spam folder too"
+  }
+}

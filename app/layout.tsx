@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Serif_SC, Noto_Sans_SC } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 
 const notoSerif = Noto_Serif_SC({
@@ -28,18 +30,21 @@ export const metadata: Metadata = {
   ),
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="zh-CN"
+      lang={locale === "en" ? "en" : "zh-CN"}
       className={`${notoSerif.variable} ${notoSans.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full bg-parchment text-near-black">{children}</body>
+      <body className="min-h-full bg-parchment text-near-black">
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      </body>
     </html>
   );
 }
