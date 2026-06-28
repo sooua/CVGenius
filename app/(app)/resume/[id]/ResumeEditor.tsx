@@ -18,6 +18,7 @@ import {
   type UseFormGetValues,
 } from "react-hook-form";
 import dynamic from "next/dynamic";
+import { getResumePageCount } from "@/app/actions/pdf";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -2483,9 +2484,30 @@ function TemplatePanel({
 
   useEffect(() => {
     if (!previewOpen) return;
-    const t = setTimeout(() => setDebounced(liveContent), PREVIEW_DEBOUNCE_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(
+      () => setDebounced(liveContent),
+      PREVIEW_DEBOUNCE_MS,
+    );
+    return () => clearTimeout(timer);
   }, [liveContent, previewOpen]);
+
+  // Page-count check (one-page discipline) — runs when the preview is open and
+  // the settled content/template/order changes.
+  const [pages, setPages] = useState<number | null>(null);
+  useEffect(() => {
+    if (!previewOpen) return;
+    let cancelled = false;
+    getResumePageCount({
+      content: debounced,
+      template,
+      sectionOrder: order,
+    }).then((res) => {
+      if (!cancelled) setPages("pages" in res ? res.pages : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [previewOpen, debounced, template, order]);
 
   const choose = (id: TemplateId) => {
     if (id === template) return;
@@ -2599,6 +2621,16 @@ function TemplatePanel({
             template={template}
             sectionOrder={order}
           />
+          {pages !== null && pages > 1 && (
+            <p className="mt-2 rounded-lg bg-error/5 ring-1 ring-error/20 px-3 py-2 text-[12px] text-error">
+              {t("pageCount.over", { pages })}
+            </p>
+          )}
+          {pages === 1 && (
+            <p className="mt-2 text-[12px] text-olive-gray">
+              {t("pageCount.ok")}
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-[12px] text-stone-gray">
               {t("template.previewNote")}

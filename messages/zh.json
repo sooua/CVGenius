@@ -811,6 +811,12 @@
       "copied": "已复制",
       "view": "查看",
       "hide": "收起"
+    },
+    "pageCount": {
+      "ok": "1 页 ✓",
+      "over": "{pages} 页 · 建议精简到一页",
+      "checking": "检查页数…",
+      "recheck": "重新检查页数"
     }
   },
   "applications": {

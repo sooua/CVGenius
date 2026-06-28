@@ -811,6 +811,12 @@
       "copied": "Copied",
       "view": "View",
       "hide": "Hide"
+    },
+    "pageCount": {
+      "ok": "1 page ✓",
+      "over": "{pages} pages · aim for one page",
+      "checking": "Checking pages…",
+      "recheck": "Re-check pages"
     }
   },
   "applications": {
