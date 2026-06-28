@@ -32,10 +32,11 @@ export default function UploadPage() {
         <p className="font-serif text-[15px] text-near-black mb-1.5">支持说明</p>
         <ul className="text-[13px] text-olive-gray leading-relaxed space-y-1">
           <li>· 支持 PDF 和 Word（.docx），不超过 5 MB</li>
-          <li>· 文字版 PDF（可复制的那种）能准确抽取；扫描件或图片版暂不支持</li>
+          <li>· 文字版 PDF（可复制的那种）能准确抽取</li>
+          <li>· 扫描件 / 图片版抽不出文字——切到「粘贴文字」，把简历内容贴进来即可</li>
           <li>· 旧版 .doc 请先另存为 .docx 或导出 PDF</li>
           <li>· 中英文都行；内容越接近简历格式，抽取越准</li>
-          <li>· 上传完我们不保留原文件，只保存结构化文字</li>
+          <li>· 我们不保留原文件，只保存结构化文字</li>
         </ul>
       </div>
     </div>

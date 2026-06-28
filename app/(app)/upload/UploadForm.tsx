@@ -2,7 +2,7 @@
 
 import { useState, useRef, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
-import { parseResumeUpload } from "@/app/actions/upload";
+import { parseResumeText, parseResumeUpload } from "@/app/actions/upload";
 
 type UploadState =
   | { kind: "idle" }
@@ -42,6 +42,7 @@ export function UploadForm() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>({ kind: "idle" });
   const [dragActive, setDragActive] = useState(false);
+  const [mode, setMode] = useState<"file" | "paste">("file");
 
   const setFile = (file: File) => {
     const err = validate(file);
@@ -102,6 +103,29 @@ export function UploadForm() {
 
   return (
     <div className="space-y-4">
+      <div className="inline-flex rounded-xl bg-warm-sand/60 p-1 text-[13px]">
+        {(["file", "paste"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            disabled={running}
+            className={
+              "rounded-lg px-4 py-1.5 transition disabled:opacity-60 " +
+              (mode === m
+                ? "bg-white text-near-black ring-1 ring-border-warm"
+                : "text-olive-gray hover:text-near-black")
+            }
+          >
+            {m === "file" ? "上传文件" : "粘贴文字"}
+          </button>
+        ))}
+      </div>
+
+      {mode === "paste" ? (
+        <PasteImport />
+      ) : (
+        <>
       <label
         htmlFor="upload-file"
         onDrop={onDrop}
@@ -201,6 +225,57 @@ export function UploadForm() {
           </button>
         </div>
       )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function PasteImport() {
+  const router = useRouter();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setError(null);
+    setBusy(true);
+    const res = await parseResumeText(text);
+    if (res.ok) {
+      router.push(`/resume/${res.resumeId}`);
+    } else {
+      setError(res.error);
+      setBusy(false);
+    }
+  };
+
+  const count = text.trim().length;
+
+  return (
+    <div className="space-y-3">
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={12}
+        disabled={busy}
+        placeholder="把简历文字整段贴进来——扫描件可以先用手机扫描 App 转成文字，或从原始文档里复制。AI 会自动抽成结构化简历。"
+        className="w-full rounded-2xl bg-ivory ring-1 ring-border-warm px-5 py-4 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
+      />
+      {error && <p className="text-[13px] text-error">{error}</p>}
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] text-stone-gray">
+          {count < 40 ? `还差 ${Math.max(0, 40 - count)} 个字开始` : `${count} 字`}
+          {busy ? " · 正在让 AI 抽取结构，约 15-30 秒" : ""}
+        </p>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={busy || count < 40}
+          className="rounded-xl bg-terracotta text-ivory px-5 py-2.5 text-[14px] font-medium hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {busy ? "结构化中…" : "结构化"}
+        </button>
+      </div>
     </div>
   );
 }

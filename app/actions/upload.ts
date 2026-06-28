@@ -92,18 +92,68 @@ export async function parseResumeUpload(
       ok: false,
       error:
         kind === "pdf"
-          ? "PDF 里没有抽出文字——可能是扫描件或图片版简历，暂不支持"
-          : "Word 文档里没有抽到文字，请确认内容不是空的或纯图片",
+          ? "PDF 里没有抽出文字——可能是扫描件或图片版。请切到「粘贴文字」，把简历文字贴进来。"
+          : "Word 文档里没有抽到文字，请确认内容不是空的或纯图片，或改用「粘贴文字」。",
     };
   }
 
-  // 2. AI parse — reserve quota + create the ai_tasks row atomically so two
-  // concurrent uploads can't both slip past the limit.
-  const reserved = await reserveAiTask({
+  // 2. AI parse + persist (shared with the paste-text path below).
+  return createResumeFromText({
     userId,
-    kind: "upload",
     plan,
+    rawText,
+    sourceType: "upload",
     inputJson: { fileName: file.name, fileSize: file.size },
+  });
+}
+
+const MAX_TEXT_CHARS = 20000;
+
+/**
+ * Paste-text import — the practical answer to scanned/image resumes: the user
+ * pastes the text (from their source doc or their own phone OCR) and it runs
+ * through the same AI structuring pipeline as an upload.
+ */
+export async function parseResumeText(text: string): Promise<UploadResponse> {
+  const raw = text.trim();
+  if (raw.length < 40) {
+    return { ok: false, error: "内容太短，请贴上完整的简历文字（至少 40 字）" };
+  }
+
+  const { userId } = await verifySession();
+  const [usage, plan] = await Promise.all([
+    getMonthlyAiUsage(userId),
+    getUserPlan(userId),
+  ]);
+  const quota = checkQuota(usage, "upload", plan);
+  if (!quota.ok) {
+    return { ok: false, error: quota.error };
+  }
+
+  return createResumeFromText({
+    userId,
+    plan,
+    rawText: raw.slice(0, MAX_TEXT_CHARS),
+    sourceType: "create",
+    inputJson: { source: "paste", length: raw.length },
+  });
+}
+
+/** Reserves quota, runs the AI parse, and persists a resume from raw text. */
+async function createResumeFromText(opts: {
+  userId: string;
+  plan: string;
+  rawText: string;
+  sourceType: "upload" | "create";
+  inputJson: unknown;
+}): Promise<UploadResponse> {
+  // Reserve quota + create the ai_tasks row atomically so two concurrent
+  // imports can't both slip past the limit.
+  const reserved = await reserveAiTask({
+    userId: opts.userId,
+    kind: "upload",
+    plan: opts.plan,
+    inputJson: opts.inputJson,
   });
   if (!reserved.ok) {
     return { ok: false, error: reserved.error };
@@ -112,7 +162,7 @@ export async function parseResumeUpload(
 
   let parsedContent;
   try {
-    const run = await parseResumeFromText(rawText);
+    const run = await parseResumeFromText(opts.rawText);
     parsedContent = run.content;
 
     await db
@@ -139,13 +189,12 @@ export async function parseResumeUpload(
     return { ok: false, error: `AI 解析失败：${message}` };
   }
 
-  // 3. Persist resume
   const [created] = await db
     .insert(resumes)
     .values({
-      userId,
-      sourceType: "upload",
-      rawText,
+      userId: opts.userId,
+      sourceType: opts.sourceType,
+      rawText: opts.rawText,
       parsedJson: parsedContent,
       currentVersionJson: parsedContent,
     })
