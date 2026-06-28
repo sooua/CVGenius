@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
@@ -38,6 +39,37 @@ export async function updateDisplayName(
   revalidatePath("/account");
   revalidatePath("/dashboard");
   return { ok: true, message: "已保存" };
+}
+
+export async function requestEmailChange(
+  _prev: AccountUpdateState,
+  formData: FormData,
+): Promise<AccountUpdateState> {
+  const { email: currentEmail } = await verifySession();
+  const raw = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  const parsed = z.email().safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: "请输入有效的邮箱地址" };
+  }
+  if (raw === currentEmail.toLowerCase()) {
+    return { ok: false, error: "新邮箱和当前邮箱一样" };
+  }
+
+  // Supabase sends a confirmation link; the email only changes once the user
+  // clicks it. Our users.email syncs on next session (see getCurrentUser).
+  const supabase = await supabaseServer();
+  const { error } = await supabase.auth.updateUser({ email: raw });
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return {
+    ok: true,
+    message: "确认邮件已发到新邮箱，点击里面的链接后邮箱才会正式更新。",
+  };
 }
 
 export async function updateLocale(

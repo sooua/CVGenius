@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import {
   deleteAccount,
+  requestEmailChange,
   updateDisplayName,
   updateLocale,
   type AccountUpdateState,
@@ -27,19 +28,71 @@ export function AccountForms({
 }
 
 function EmailField({ email }: { email: string }) {
+  const [editing, setEditing] = useState(false);
+  const [state, action, pending] = useActionState<AccountUpdateState, FormData>(
+    requestEmailChange,
+    null,
+  );
+
   return (
     <div>
-      <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
-        邮箱
+      <label
+        htmlFor="email"
+        className="block text-[12px] text-olive-gray mb-1.5 tracking-wide"
+      >
+        邮箱（登录用）
       </label>
-      <input
-        readOnly
-        value={email}
-        className="w-full rounded-xl bg-parchment ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black cursor-not-allowed"
-      />
-      <p className="mt-1.5 text-[11.5px] text-stone-gray">
-        邮箱绑定登录，无法直接在这里修改。
-      </p>
+      {!editing ? (
+        <div className="flex items-center gap-2">
+          <input
+            readOnly
+            value={email}
+            className="flex-1 rounded-xl bg-parchment ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black"
+          />
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="rounded-xl bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream transition"
+          >
+            更改
+          </button>
+        </div>
+      ) : (
+        <form action={action}>
+          <div className="flex items-center gap-2">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="新邮箱地址"
+              className="flex-1 rounded-xl bg-white ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
+            />
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-xl bg-terracotta text-ivory px-4 py-2 text-[13px] font-medium hover:bg-coral disabled:opacity-60 transition"
+            >
+              {pending ? "发送中…" : "发确认邮件"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              disabled={pending}
+              className="rounded-xl text-stone-gray px-2 py-2 text-[13px] hover:text-near-black disabled:opacity-60 transition"
+            >
+              取消
+            </button>
+          </div>
+          <FormNotice state={state} />
+        </form>
+      )}
+      {!editing && (
+        <p className="mt-1.5 text-[11.5px] text-stone-gray">
+          更改需要在新邮箱里点确认链接才会生效。
+        </p>
+      )}
     </div>
   );
 }

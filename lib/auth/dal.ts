@@ -35,7 +35,18 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   const existing = await db.query.users.findFirst({
     where: eq(users.id, userId),
   });
-  if (existing) return existing;
+  if (existing) {
+    // Keep our row in sync after a confirmed Supabase email change.
+    if (existing.email !== email) {
+      const [updated] = await db
+        .update(users)
+        .set({ email, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      return updated ?? existing;
+    }
+    return existing;
+  }
 
   const [created] = await db
     .insert(users)
