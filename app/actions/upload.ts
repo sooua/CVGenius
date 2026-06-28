@@ -15,6 +15,7 @@ import {
 } from "@/lib/ai/quota";
 import { parseResumeFromText } from "@/services/ai/parse";
 import { resolveOcrProvider } from "@/services/ocr";
+import { ocrPdfPages } from "@/services/ocr/pdf";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -110,12 +111,24 @@ export async function parseResumeUpload(
     return { ok: false, error: `${label} 读取失败：${message}` };
   }
 
+  // Scanned (image-only) PDF: no extractable text — fall back to rasterize+OCR.
+  if (!rawText && kind === "pdf") {
+    const ocr = resolveOcrProvider();
+    if (ocr) {
+      try {
+        rawText = (await ocrPdfPages(buffer, ocr)).trim();
+      } catch {
+        // leave rawText empty -> guidance message below
+      }
+    }
+  }
+
   if (!rawText) {
     return {
       ok: false,
       error:
         kind === "pdf"
-          ? "PDF 里没有抽出文字——可能是扫描件或图片版。请切到「粘贴文字」，把简历文字贴进来。"
+          ? "PDF 里没有抽出文字——可能是扫描件或图片版。请截图后上传，或切到「粘贴文字」。"
           : kind === "docx"
             ? "Word 文档里没有抽到文字，请确认内容不是空的或纯图片，或改用「粘贴文字」。"
             : "图片里没识别到文字，请确认是清晰的简历截图/照片，或改用「粘贴文字」。",

@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // mammoth (.docx parsing) is CommonJS and bundles jszip with dynamic
-  // requires — keep it external so the server bundler doesn't break it.
-  serverExternalPackages: ["mammoth"],
+  // Keep server-only native/CJS libs out of the bundler:
+  // - mammoth (.docx) bundles jszip with dynamic requires
+  // - @napi-rs/canvas is a native addon used to rasterize scanned PDFs for OCR
+  serverExternalPackages: ["mammoth", "@napi-rs/canvas"],
   experimental: {
     // Allow up to 5MB uploads in Server Actions (default is 1MB). Used by /upload.
     serverActions: {
