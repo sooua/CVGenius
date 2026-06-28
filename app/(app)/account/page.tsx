@@ -8,6 +8,7 @@ import { signOut } from "@/app/actions/auth";
 import { openBillingPortal } from "@/app/actions/billing";
 import { AccountForms, DataAndDanger } from "./AccountForms";
 import { MfaSettings } from "./MfaSettings";
+import { SessionActions } from "./SessionActions";
 
 export const metadata: Metadata = {
   title: "账户",
@@ -124,9 +125,11 @@ export default async function AccountPage() {
             type="submit"
             className="rounded-lg bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream transition"
           >
-            退出登录
+            退出登录（当前设备）
           </button>
         </form>
+
+        <SessionActions />
       </section>
 
       <MfaSettings />
