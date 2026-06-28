@@ -19,11 +19,13 @@ function validate(file: File): string | null {
   const name = file.name.toLowerCase();
   const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
   const isDocx = file.type === DOCX_TYPE || name.endsWith(".docx");
+  const isImage =
+    file.type.startsWith("image/") || /\.(png|jpe?g|webp)$/.test(name);
   if (name.endsWith(".doc") && !isDocx) {
     return "暂不支持旧版 .doc，请另存为 .docx 或导出 PDF";
   }
-  if (!isPdf && !isDocx) {
-    return "只支持 PDF 和 Word（.docx）文件";
+  if (!isPdf && !isDocx && !isImage) {
+    return "只支持 PDF、Word（.docx）和图片（png/jpg）";
   }
   if (file.size > MAX_BYTES) {
     return "文件超过 5 MB";
@@ -143,7 +145,7 @@ export function UploadForm() {
           ref={inputRef}
           id="upload-file"
           type="file"
-          accept="application/pdf,.pdf,.docx"
+          accept="application/pdf,.pdf,.docx,image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
           className="hidden"
           disabled={running}
           onChange={(e) => {
@@ -158,10 +160,10 @@ export function UploadForm() {
               ↑
             </div>
             <p className="font-serif text-[17px] text-near-black mb-1.5">
-              把 PDF 或 Word 拖到这里，或者点击选择
+              把 PDF、Word 或简历照片拖到这里，或者点击选择
             </p>
             <p className="text-[12.5px] text-stone-gray">
-              最大 5 MB · 支持 PDF、Word（.docx）
+              最大 5 MB · 支持 PDF、Word（.docx）、图片（png/jpg）
             </p>
           </>
         )}

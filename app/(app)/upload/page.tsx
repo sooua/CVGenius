@@ -22,8 +22,8 @@ export default function UploadPage() {
         把你手里那份交给 AI，几秒钟把它结构化
       </h1>
       <p className="text-[15px] text-olive-gray leading-relaxed max-w-xl mb-10">
-        上传一份 PDF 或 Word——AI 会把里面的教育、项目、实习、技能、奖项全部抽取出来，
-        填进编辑器里。之后你可以直接改写、体检、导出。
+        上传 PDF、Word，或直接拍张简历照片——AI 会把里面的教育、项目、实习、技能、奖项
+        全部抽取出来，填进编辑器里。之后你可以直接改写、体检、导出。
       </p>
 
       <UploadForm />
@@ -31,9 +31,9 @@ export default function UploadPage() {
       <div className="mt-10 rounded-2xl bg-warm-sand/50 ring-1 ring-border-warm px-6 py-5">
         <p className="font-serif text-[15px] text-near-black mb-1.5">支持说明</p>
         <ul className="text-[13px] text-olive-gray leading-relaxed space-y-1">
-          <li>· 支持 PDF 和 Word（.docx），不超过 5 MB</li>
-          <li>· 文字版 PDF（可复制的那种）能准确抽取</li>
-          <li>· 扫描件 / 图片版抽不出文字——切到「粘贴文字」，把简历内容贴进来即可</li>
+          <li>· 支持 PDF、Word（.docx）和图片（png/jpg），不超过 5 MB</li>
+          <li>· 文字版 PDF / Word 直接抽取；简历照片或截图走 AI 识别（OCR）</li>
+          <li>· 扫描成 PDF 的简历抽不出文字——截图上传，或切到「粘贴文字」</li>
           <li>· 旧版 .doc 请先另存为 .docx 或导出 PDF</li>
           <li>· 中英文都行；内容越接近简历格式，抽取越准</li>
           <li>· 我们不保留原文件，只保存结构化文字</li>

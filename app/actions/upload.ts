@@ -14,19 +14,26 @@ import {
   reserveAiTask,
 } from "@/lib/ai/quota";
 import { parseResumeFromText } from "@/services/ai/parse";
+import { resolveOcrProvider } from "@/services/ocr";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 const DOCX_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-type FileKind = "pdf" | "docx" | "doc" | "unknown";
+type FileKind = "pdf" | "docx" | "doc" | "image" | "unknown";
 
 function detectKind(file: File): FileKind {
   const name = file.name.toLowerCase();
   if (file.type === "application/pdf" || name.endsWith(".pdf")) return "pdf";
   if (file.type === DOCX_TYPE || name.endsWith(".docx")) return "docx";
   if (name.endsWith(".doc")) return "doc"; // legacy binary format
+  if (
+    file.type.startsWith("image/") ||
+    /\.(png|jpe?g|webp)$/.test(name)
+  ) {
+    return "image";
+  }
   return "unknown";
 }
 
@@ -50,7 +57,7 @@ export async function parseResumeUpload(
     };
   }
   if (kind === "unknown") {
-    return { ok: false, error: "只支持 PDF 和 Word（.docx）文件" };
+    return { ok: false, error: "只支持 PDF、Word（.docx）和图片（png/jpg）" };
   }
 
   if (file.size > MAX_FILE_BYTES) {
@@ -68,22 +75,38 @@ export async function parseResumeUpload(
     return { ok: false, error: quota.error };
   }
 
-  // 1. File → raw text (PDF via unpdf, Word via mammoth)
+  // 1. File → raw text (PDF via unpdf, Word via mammoth, image via cloud OCR)
   const buffer = new Uint8Array(await file.arrayBuffer());
   let rawText: string;
   try {
     if (kind === "pdf") {
       const { text } = await extractText(buffer, { mergePages: true });
       rawText = text.trim();
-    } else {
+    } else if (kind === "docx") {
       const { value } = await mammoth.extractRawText({
         buffer: Buffer.from(buffer),
       });
       rawText = value.trim();
+    } else {
+      // image — cloud OCR
+      const ocr = resolveOcrProvider();
+      if (!ocr) {
+        return {
+          ok: false,
+          error:
+            "图片识别暂未开启，请切到「粘贴文字」，把简历内容贴进来。",
+        };
+      }
+      const { text } = await ocr.recognize({
+        bytes: buffer,
+        mimeType: file.type || "image/jpeg",
+      });
+      rawText = text.trim();
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "文件解析失败";
-    const label = kind === "pdf" ? "PDF" : "Word";
+    const label =
+      kind === "pdf" ? "PDF" : kind === "docx" ? "Word" : "图片";
     return { ok: false, error: `${label} 读取失败：${message}` };
   }
 
@@ -93,7 +116,9 @@ export async function parseResumeUpload(
       error:
         kind === "pdf"
           ? "PDF 里没有抽出文字——可能是扫描件或图片版。请切到「粘贴文字」，把简历文字贴进来。"
-          : "Word 文档里没有抽到文字，请确认内容不是空的或纯图片，或改用「粘贴文字」。",
+          : kind === "docx"
+            ? "Word 文档里没有抽到文字，请确认内容不是空的或纯图片，或改用「粘贴文字」。"
+            : "图片里没识别到文字，请确认是清晰的简历截图/照片，或改用「粘贴文字」。",
     };
   }
 
