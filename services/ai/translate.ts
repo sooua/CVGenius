@@ -16,9 +16,9 @@ export interface TranslateRunResult {
 const SYSTEM_PROMPT = `你在把一份中文简历翻译成英文，供英语招聘方阅读。
 
 硬规则：
-1. 保持下列字段原样不动：id、kind、email、phone、portfolioUrl、startDate、endDate
+1. 保持下列字段原样不动：id、kind、email、phone、portfolioUrl、github、linkedin、startDate、endDate
 2. 姓名（basicInfo.name）：用标准汉语拼音罗马化，姓在前名在后首字母大写（"夏禾壮" → "Xia Hezhuang"）
-3. targetRole / headline / summary / experience.title / org / role / location / highlights / skill category / skill items / award title / award issuer / certification 字段：自然、专业地翻译成英文
+3. targetRole / headline / summary / experience.title / org / role / location / highlights / skill category / skill items / award title / award issuer / certification / language name 字段：自然、专业地翻译成英文。语言水平（language.level）里的考试名和分数（CET-6、IELTS 7.0、N2 等）保留原样，只翻译描述性文字
 4. 翻译时：
    - 绝不虚构事实，数字和专有名词（公司、学校、技术栈、CVE 号、奖项名）保留原样或用国际通用写法
    - 去除中式英文——用母语者会用的表达；用 result-driven 风格，避免冗余修饰

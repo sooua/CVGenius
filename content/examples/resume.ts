@@ -15,6 +15,8 @@ export function exampleResumeContent(): ResumeContent {
       phone: "+86 138 0000 0000",
       location: "上海",
       portfolioUrl: "https://huizhuang.dev",
+      github: "https://github.com/huizhuang",
+      linkedin: "",
     },
     targetRole: "前端工程师",
     summary:
@@ -109,6 +111,10 @@ export function exampleResumeContent(): ResumeContent {
         date: "2024.06",
         issuer: "",
       },
+    ],
+    languages: [
+      { id: "lang-1", name: "中文", level: "母语" },
+      { id: "lang-2", name: "英语", level: "CET-6 · 流利读写" },
     ],
   };
 }

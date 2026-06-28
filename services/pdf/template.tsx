@@ -1,18 +1,11 @@
-import {
-  Document,
-  Font,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
-import path from "node:path";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import {
   experienceKindLabels,
   type Award,
   type Certification,
   type Experience,
   type ExperienceKind,
+  type Language,
   type ResumeContent,
   type SkillGroup,
 } from "@/lib/resume/schema";
@@ -33,6 +26,7 @@ const sectionLabels = {
     skills: "技能",
     awards: "获奖荣誉",
     certifications: "证书",
+    languages: "语言能力",
     fallbackCategory: "其他",
     fallbackName: "未命名简历",
     unnamedExperience: "（未命名）",
@@ -43,6 +37,7 @@ const sectionLabels = {
     skills: "Skills",
     awards: "Awards",
     certifications: "Certifications",
+    languages: "Languages",
     fallbackCategory: "Other",
     fallbackName: "Untitled Resume",
     unnamedExperience: "(Untitled)",
@@ -53,24 +48,10 @@ function pickKindLabels(locale: PdfLocale) {
   return locale === "en" ? experienceKindLabelsEn : experienceKindLabels;
 }
 
-// Register fonts once per process; later renders reuse the cache.
-const fontsDir = path.join(process.cwd(), "public/fonts");
-
-Font.register({
-  family: "NotoSansSC",
-  fonts: [
-    { src: path.join(fontsDir, "NotoSansSC-Regular.otf"), fontWeight: 400 },
-    { src: path.join(fontsDir, "NotoSansSC-Medium.otf"), fontWeight: 500 },
-  ],
-});
-
-Font.register({
-  family: "NotoSerifSC",
-  src: path.join(fontsDir, "NotoSerifSC-Regular.otf"),
-});
-
-// Disable automatic hyphenation — it mangles CJK word boundaries.
-Font.registerHyphenationCallback((word) => [word]);
+// Font registration is runtime-specific (filesystem on the server, URLs in the
+// browser preview) so it lives in the callers — see registerFonts.server.ts and
+// the client LivePreview component. This module only references families by name
+// and so stays isomorphic.
 
 type HeaderStyle = "bar" | "underline" | "filled";
 
@@ -271,12 +252,19 @@ function makeStyles(t: Theme) {
 
 type Styles = ReturnType<typeof makeStyles>;
 
+function shortUrl(u: string): string {
+  return u.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
 function ContactRow({ content, s }: { content: ResumeContent; s: Styles }) {
+  const b = content.basicInfo;
   const parts = [
-    content.basicInfo.location,
-    content.basicInfo.phone,
-    content.basicInfo.email,
-    content.basicInfo.portfolioUrl,
+    b.location,
+    b.phone,
+    b.email,
+    shortUrl(b.portfolioUrl),
+    shortUrl(b.github),
+    shortUrl(b.linkedin),
   ].filter((p) => p.trim());
   if (parts.length === 0) return null;
   return (
@@ -495,6 +483,33 @@ function CertificationsSection({
   );
 }
 
+function LanguagesSection({
+  languages,
+  locale,
+  s,
+  headerStyle,
+}: {
+  languages: Language[];
+  locale: PdfLocale;
+  s: Styles;
+  headerStyle: HeaderStyle;
+}) {
+  const labels = sectionLabels[locale];
+  const useful = languages.filter((l) => l.name.trim() || l.level.trim());
+  if (useful.length === 0) return null;
+  return (
+    <View>
+      <SectionHeader label={labels.languages} s={s} headerStyle={headerStyle} />
+      {useful.map((l) => (
+        <View key={l.id} style={s.twoColRow} wrap={false}>
+          <Text style={s.colLabel}>{l.name}</Text>
+          <Text style={[s.colBodyText, { flex: 1 }]}>{l.level}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function ResumeDocument({
   content,
   locale = "zh",
@@ -516,6 +531,7 @@ export function ResumeDocument({
     skills,
     awards,
     certifications,
+    languages,
   } = content;
 
   const labels = sectionLabels[locale];
@@ -580,6 +596,12 @@ export function ResumeDocument({
         />
         <CertificationsSection
           certs={certifications}
+          locale={locale}
+          s={s}
+          headerStyle={headerStyle}
+        />
+        <LanguagesSection
+          languages={languages}
           locale={locale}
           s={s}
           headerStyle={headerStyle}

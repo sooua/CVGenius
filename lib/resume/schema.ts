@@ -35,8 +35,17 @@ export const basicInfoSchema = z.object({
   phone: z.string().max(40).default(""),
   location: z.string().max(80).default(""),
   portfolioUrl: z.string().max(200).default(""),
+  github: z.string().max(200).default(""),
+  linkedin: z.string().max(200).default(""),
 });
 export type BasicInfo = z.infer<typeof basicInfoSchema>;
+
+export const languageSchema = z.object({
+  id: z.string(),
+  name: z.string().max(40).default(""),
+  level: z.string().max(40).default(""),
+});
+export type Language = z.infer<typeof languageSchema>;
 
 export const skillGroupSchema = z.object({
   id: z.string(),
@@ -69,6 +78,7 @@ export const resumeContentSchema = z.object({
   skills: z.array(skillGroupSchema).default([]),
   awards: z.array(awardSchema).default([]),
   certifications: z.array(certificationSchema).default([]),
+  languages: z.array(languageSchema).default([]),
 });
 export type ResumeContent = z.infer<typeof resumeContentSchema>;
 
@@ -80,6 +90,8 @@ export function emptyBasicInfo(): BasicInfo {
     phone: "",
     location: "",
     portfolioUrl: "",
+    github: "",
+    linkedin: "",
   };
 }
 
@@ -92,6 +104,7 @@ export function emptyResumeContent(): ResumeContent {
     skills: [],
     awards: [],
     certifications: [],
+    languages: [],
   };
 }
 

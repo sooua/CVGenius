@@ -1,14 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   useForm,
   useFieldArray,
+  useWatch,
   type Control,
   type UseFormRegister,
   type UseFormSetValue,
   type UseFormGetValues,
 } from "react-hook-form";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -41,6 +50,7 @@ import type {
 import {
   experienceKinds,
   experienceKindLabels,
+  parseResumeContent,
   type ExperienceKind,
   type ResumeContent,
 } from "@/lib/resume/schema";
@@ -197,6 +207,7 @@ export function ResumeEditor({
     control,
     name: "certifications",
   });
+  const languagesField = useFieldArray({ control, name: "languages" });
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestValuesRef = useRef<ResumeContent>(initialContent);
@@ -554,6 +565,20 @@ export function ResumeEditor({
               className={inputClass}
             />
           </Field>
+          <Field label="GitHub">
+            <input
+              {...register("basicInfo.github")}
+              placeholder="https://github.com/你的用户名"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="LinkedIn">
+            <input
+              {...register("basicInfo.linkedin")}
+              placeholder="https://linkedin.com/in/你的用户名"
+              className={inputClass}
+            />
+          </Field>
         </div>
       </Section>
 
@@ -887,6 +912,52 @@ export function ResumeEditor({
         )}
       </Section>
 
+      <Section
+        title="语言能力"
+        actions={
+          <button
+            type="button"
+            onClick={() =>
+              languagesField.append({ id: newId(), name: "", level: "" })
+            }
+            className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
+          >
+            + 新增一条
+          </button>
+        }
+      >
+        {languagesField.fields.length === 0 ? (
+          <EmptyRow text="例如：英语 · CET-6 / 雅思 7.0；日语 · N2。语言 + 水平各一行。" />
+        ) : (
+          <ul className="space-y-2">
+            {languagesField.fields.map((field, index) => (
+              <li
+                key={field.id}
+                className="rounded-xl bg-ivory ring-1 ring-border-warm px-4 py-3 flex flex-wrap items-center gap-3"
+              >
+                <input
+                  {...register(`languages.${index}.name`)}
+                  placeholder="语言（如 英语）"
+                  className={`${inputClass} w-40`}
+                />
+                <input
+                  {...register(`languages.${index}.level`)}
+                  placeholder="水平（如 CET-6 · 流利读写）"
+                  className={`${inputClass} flex-1`}
+                />
+                <button
+                  type="button"
+                  onClick={() => languagesField.remove(index)}
+                  className="text-[12px] text-stone-gray hover:text-error transition shrink-0"
+                >
+                  删除
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
       {panelOpen && checkup.kind !== "idle" && (
         <CheckupPanel
           state={checkup}
@@ -922,12 +993,7 @@ export function ResumeEditor({
       <TemplatePanel
         resumeId={resumeId}
         initialTemplate={initialTemplate}
-        flushPendingSave={async () => {
-          if (saveState.kind === "dirty" || saveState.kind === "saving") {
-            if (timerRef.current) clearTimeout(timerRef.current);
-            await flushSave();
-          }
-        }}
+        control={control}
       />
 
       <SharePanel resumeId={resumeId} initial={initialShare} />
@@ -1970,29 +2036,45 @@ function VersionsPanel({
   );
 }
 
+// react-pdf's browser build is heavy + client-only — load it on demand.
+const LivePreview = dynamic(() => import("./LivePreview"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[72vh] items-center justify-center rounded-xl ring-1 ring-border-warm bg-white">
+      <p className="text-[13px] text-stone-gray">正在加载预览引擎…</p>
+    </div>
+  ),
+});
+
+const PREVIEW_DEBOUNCE_MS = 500;
+
 function TemplatePanel({
   resumeId,
   initialTemplate,
-  flushPendingSave,
+  control,
 }: {
   resumeId: string;
   initialTemplate: TemplateId;
-  flushPendingSave: () => Promise<void>;
+  control: Control<ResumeContent>;
 }) {
   const [template, setTemplate] = useState<TemplateId>(initialTemplate);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [version, setVersion] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [, startSave] = useTransition();
 
-  const previewSrc = `/api/resumes/${resumeId}/pdf?template=${template}&v=${version}`;
+  // Subscribe to live form values here (not in the parent) so only this panel
+  // re-renders while typing. Debounce before feeding the heavy PDF renderer.
+  const liveValues = useWatch({ control });
+  const liveContent = useMemo(
+    () => parseResumeContent(liveValues),
+    [liveValues],
+  );
+  const [debounced, setDebounced] = useState<ResumeContent>(liveContent);
 
-  const openOrRefresh = async () => {
-    setLoading(true);
-    await flushPendingSave();
-    setVersion((v) => v + 1);
-    setPreviewOpen(true);
-  };
+  useEffect(() => {
+    if (!previewOpen) return;
+    const t = setTimeout(() => setDebounced(liveContent), PREVIEW_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [liveContent, previewOpen]);
 
   const choose = (id: TemplateId) => {
     if (id === template) return;
@@ -2001,10 +2083,6 @@ function TemplatePanel({
     startSave(() => {
       setResumeTemplate(resumeId, id);
     });
-    if (previewOpen) {
-      setLoading(true);
-      setVersion((v) => v + 1);
-    }
   };
 
   return (
@@ -2013,15 +2091,18 @@ function TemplatePanel({
         <div>
           <p className="overline mb-1.5">外观</p>
           <h2 className="font-serif text-[17px] text-near-black">
-            选一个模板，看看导出长什么样
+            选一个模板，实时看导出效果
           </h2>
         </div>
         <button
           type="button"
-          onClick={openOrRefresh}
+          onClick={() => {
+            setDebounced(liveContent);
+            setPreviewOpen((o) => !o);
+          }}
           className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
         >
-          {previewOpen ? "刷新预览" : "预览"}
+          {previewOpen ? "收起预览" : "实时预览"}
         </button>
       </div>
 
@@ -2053,18 +2134,20 @@ function TemplatePanel({
 
       {previewOpen && (
         <div className="motion-slide-in-soft mt-4">
-          <iframe
-            key={version}
-            src={previewSrc}
-            title="简历预览"
-            onLoad={() => setLoading(false)}
-            className="w-full h-[70vh] rounded-xl ring-1 ring-border-warm bg-white"
-          />
-          <p className="mt-2 text-[12px] text-stone-gray">
-            {loading
-              ? "正在生成预览…"
-              : "预览反映已保存的内容。改了内容后点「刷新预览」。"}
-          </p>
+          <LivePreview content={debounced} template={template} />
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <p className="text-[12px] text-stone-gray">
+              边改边看 · 预览用轻量字体，极少数生僻字可能不显示，导出 PDF 不受影响。
+            </p>
+            <a
+              href={`/api/resumes/${resumeId}/pdf?template=${template}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-[12px] text-terracotta hover:underline"
+            >
+              用完整字体打开 ↗
+            </a>
+          </div>
         </div>
       )}
     </section>
