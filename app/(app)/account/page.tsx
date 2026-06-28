@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { signOut } from "@/app/actions/auth";
 import { openBillingPortal } from "@/app/actions/billing";
 import { AccountForms, DataAndDanger } from "./AccountForms";
+import { MfaSettings } from "./MfaSettings";
 
 export const metadata: Metadata = {
   title: "账户",
@@ -127,6 +128,8 @@ export default async function AccountPage() {
           </button>
         </form>
       </section>
+
+      <MfaSettings />
 
       <DataAndDanger email={user.email} />
     </div>

@@ -43,11 +43,44 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
   const isAuthOnly = AUTH_ONLY_PATHS.some((p) => path.startsWith(p));
+  const isMfa = path.startsWith("/mfa");
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
+    return NextResponse.redirect(url);
+  }
+
+  // Two-factor gate: a user with a verified factor whose current session is
+  // only aal1 must clear the /mfa challenge before reaching protected pages.
+  if (user && (isProtected || isMfa)) {
+    const { data: aal } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const needsMfa =
+      aal?.currentLevel === "aal1" && aal?.nextLevel === "aal2";
+
+    if (needsMfa && !isMfa) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mfa";
+      url.search = "";
+      url.searchParams.set("next", path);
+      return NextResponse.redirect(url);
+    }
+    // Already satisfied (or no factor) — don't strand the user on /mfa.
+    if (!needsMfa && isMfa) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // /mfa requires a session.
+  if (isMfa && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", "/dashboard");
     return NextResponse.redirect(url);
   }
 
