@@ -31,8 +31,15 @@ export const resumes = pgTable("resumes", {
 
   status: varchar("status", { length: 20 }).notNull().default("draft"),
 
+  // PDF template choice (presentation only). See lib/resume/templates.ts.
+  template: varchar("template", { length: 20 }).notNull().default("classic"),
+
   shareToken: text("share_token").unique(),
   shareEnabled: boolean("share_enabled").notNull().default(false),
+  // null = never expires. When set, the public link 404s past this time.
+  shareExpiresAt: timestamp("share_expires_at", { withTimezone: true }),
+  // null = no passcode. Stores a sha256 hex of the code, never plaintext.
+  sharePasscode: varchar("share_passcode", { length: 64 }),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

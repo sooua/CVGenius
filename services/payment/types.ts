@@ -74,4 +74,10 @@ export interface PaymentProvider {
   verifyAndParseWebhook(req: Request): Promise<WebhookEvent>;
   ensureCustomer(input: EnsureCustomerInput): Promise<EnsureCustomerResult>;
   createPortalSession(input: PortalSessionInput): Promise<PortalSessionResult>;
+  /**
+   * Cancels every active subscription tied to a customer. Called when a user
+   * deletes their account so we never keep billing a closed account.
+   * Idempotent — a no-op if the customer has nothing active.
+   */
+  cancelActiveSubscriptions(customerId: string): Promise<void>;
 }

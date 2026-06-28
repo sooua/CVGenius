@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { resumes } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { parseResumeContent } from "@/lib/resume/schema";
+import { normalizeTemplate } from "@/lib/resume/templates";
 import { renderResumePdf } from "@/services/pdf/render";
 import { getOrGenerateEnglishVersion } from "@/app/actions/ai";
 
@@ -26,6 +27,10 @@ export async function GET(
 
   const url = new URL(request.url);
   const lang = url.searchParams.get("lang") === "en" ? "en" : "zh";
+  // ?template= lets the editor preview a template before it's saved; falls
+  // back to the resume's stored choice.
+  const templateParam = url.searchParams.get("template");
+  const template = normalizeTemplate(templateParam ?? resume.template);
 
   let content = parseResumeContent(resume.currentVersionJson);
 
@@ -43,7 +48,7 @@ export async function GET(
     content = translation.content;
   }
 
-  const pdf = await renderResumePdf(content, lang);
+  const pdf = await renderResumePdf(content, lang, template);
   const { ascii, unicode } = buildFilename(content.basicInfo.name, lang);
 
   return new NextResponse(pdf as unknown as BodyInit, {

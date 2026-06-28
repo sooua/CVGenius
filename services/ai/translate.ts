@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 import {
   resumeContentSchema,
   type ResumeContent,
@@ -30,13 +31,17 @@ const SYSTEM_PROMPT = `你在把一份中文简历翻译成英文，供英语招
 export async function translateResumeToEnglish(
   content: ResumeContent,
 ): Promise<TranslateRunResult> {
-  const result = await generateObject({
-    model: pickModel("quality"),
-    schema: resumeContentSchema,
-    system: SYSTEM_PROMPT,
-    prompt: `中文简历（JSON）：\n${JSON.stringify(content, null, 2)}`,
-    temperature: 0.2,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateObject({
+      model: pickModel("quality"),
+      schema: resumeContentSchema,
+      system: SYSTEM_PROMPT,
+      prompt: `中文简历（JSON）：\n${JSON.stringify(content, null, 2)}`,
+      temperature: 0.2,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     content: result.object,

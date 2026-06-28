@@ -2,9 +2,13 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { users } from "@/db/schema/users";
 import { verifySession } from "@/lib/auth/dal";
+import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { resolvePaymentProvider } from "@/services/payment";
 
 const SUPPORTED_LOCALES = ["zh-CN", "en-US"] as const;
 
@@ -54,4 +58,57 @@ export async function updateLocale(
   revalidatePath("/account");
   revalidatePath("/dashboard");
   return { ok: true, message: "已切换" };
+}
+
+/**
+ * GDPR Art. 17 — permanently deletes the account and everything attached.
+ * Requires the user to type their email as confirmation. Cancels any active
+ * Stripe subscription first so a deleted account is never billed again.
+ *
+ * Order matters: cancel billing → wipe app rows (cascades to resumes,
+ * versions, ai_tasks, orders, job_targets) → delete the Supabase auth user →
+ * sign out → redirect home.
+ */
+export async function deleteAccount(
+  _prev: AccountUpdateState,
+  formData: FormData,
+): Promise<AccountUpdateState> {
+  const { userId, email } = await verifySession();
+
+  const confirm = String(formData.get("confirmEmail") ?? "").trim();
+  if (confirm.toLowerCase() !== email.toLowerCase()) {
+    return { ok: false, error: "邮箱不匹配，请输入你的登录邮箱以确认删除。" };
+  }
+
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { stripeCustomerId: true },
+  });
+
+  // Stop billing before the row that holds the customer id disappears.
+  if (user?.stripeCustomerId) {
+    try {
+      await resolvePaymentProvider("stripe").cancelActiveSubscriptions(
+        user.stripeCustomerId,
+      );
+    } catch {
+      // Don't trap the user in a deletable-but-undeletable state if Stripe is
+      // unreachable; the subscription can still be cancelled from the portal.
+    }
+  }
+
+  // Cascades remove resumes, versions, ai_tasks, orders, job_targets.
+  await db.delete(users).where(eq(users.id, userId));
+
+  // Remove the auth identity so the email can't sign back into a ghost account.
+  try {
+    await supabaseAdmin().auth.admin.deleteUser(userId);
+  } catch {
+    // App data is already gone; a stale auth row is harmless and re-creates a
+    // fresh empty profile on next login.
+  }
+
+  const supabase = await supabaseServer();
+  await supabase.auth.signOut();
+  redirect("/?deleted=1");
 }

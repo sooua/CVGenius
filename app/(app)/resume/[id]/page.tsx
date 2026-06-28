@@ -7,6 +7,7 @@ import { getResume, listResumeVersions } from "@/app/actions/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { getAiQuotaSnapshot } from "@/lib/ai/quota";
 import { parseResumeContent } from "@/lib/resume/schema";
+import { normalizeTemplate } from "@/lib/resume/templates";
 import { checkupResultSchema } from "@/services/ai/schemas";
 import { ResumeEditor } from "./ResumeEditor";
 
@@ -86,9 +87,14 @@ export default async function ResumePage({
         initialContent={content}
         initialCheckup={initialCheckup}
         initialQuota={quotaSnapshot}
+        initialTemplate={normalizeTemplate(resume.template)}
         initialShare={{
           enabled: resume.shareEnabled,
           token: resume.shareToken,
+          expiresAt: resume.shareExpiresAt
+            ? resume.shareExpiresAt.toISOString()
+            : null,
+          hasPasscode: resume.sharePasscode !== null,
         }}
         initialVersions={initialVersions}
       />

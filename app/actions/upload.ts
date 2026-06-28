@@ -2,14 +2,33 @@
 
 import { eq } from "drizzle-orm";
 import { extractText } from "unpdf";
+import mammoth from "mammoth";
 import { aiTasks } from "@/db/schema/aiTasks";
 import { resumes } from "@/db/schema/resumes";
 import { db } from "@/db/client";
 import { verifySession } from "@/lib/auth/dal";
-import { checkQuota, getMonthlyAiUsage, getUserPlan } from "@/lib/ai/quota";
+import {
+  checkQuota,
+  getMonthlyAiUsage,
+  getUserPlan,
+  reserveAiTask,
+} from "@/lib/ai/quota";
 import { parseResumeFromText } from "@/services/ai/parse";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const DOCX_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+type FileKind = "pdf" | "docx" | "doc" | "unknown";
+
+function detectKind(file: File): FileKind {
+  const name = file.name.toLowerCase();
+  if (file.type === "application/pdf" || name.endsWith(".pdf")) return "pdf";
+  if (file.type === DOCX_TYPE || name.endsWith(".docx")) return "docx";
+  if (name.endsWith(".doc")) return "doc"; // legacy binary format
+  return "unknown";
+}
 
 export type UploadResponse =
   | { ok: true; resumeId: string }
@@ -23,8 +42,15 @@ export async function parseResumeUpload(
     return { ok: false, error: "请选择一个文件" };
   }
 
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-    return { ok: false, error: "只支持 PDF 文件" };
+  const kind = detectKind(file);
+  if (kind === "doc") {
+    return {
+      ok: false,
+      error: "暂不支持旧版 .doc，请在 Word 里另存为 .docx，或导出 PDF 后再上传",
+    };
+  }
+  if (kind === "unknown") {
+    return { ok: false, error: "只支持 PDF 和 Word（.docx）文件" };
   }
 
   if (file.size > MAX_FILE_BYTES) {
@@ -42,36 +68,47 @@ export async function parseResumeUpload(
     return { ok: false, error: quota.error };
   }
 
-  // 1. PDF → raw text
+  // 1. File → raw text (PDF via unpdf, Word via mammoth)
   const buffer = new Uint8Array(await file.arrayBuffer());
   let rawText: string;
   try {
-    const { text } = await extractText(buffer, { mergePages: true });
-    rawText = text.trim();
+    if (kind === "pdf") {
+      const { text } = await extractText(buffer, { mergePages: true });
+      rawText = text.trim();
+    } else {
+      const { value } = await mammoth.extractRawText({
+        buffer: Buffer.from(buffer),
+      });
+      rawText = value.trim();
+    }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "PDF 解析失败";
-    return { ok: false, error: `PDF 读取失败：${message}` };
+    const message = err instanceof Error ? err.message : "文件解析失败";
+    const label = kind === "pdf" ? "PDF" : "Word";
+    return { ok: false, error: `${label} 读取失败：${message}` };
   }
 
   if (!rawText) {
     return {
       ok: false,
-      error: "PDF 里没有抽出文字——可能是扫描件或图片版简历，暂不支持",
+      error:
+        kind === "pdf"
+          ? "PDF 里没有抽出文字——可能是扫描件或图片版简历，暂不支持"
+          : "Word 文档里没有抽到文字，请确认内容不是空的或纯图片",
     };
   }
 
-  // 2. AI parse — create ai_tasks row first for logging even if the AI call fails.
-  const [task] = await db
-    .insert(aiTasks)
-    .values({
-      userId,
-      taskType: "parse_upload",
-      provider: "deepseek",
-      model: "pending",
-      inputJson: { fileName: file.name, fileSize: file.size },
-      status: "running",
-    })
-    .returning({ id: aiTasks.id });
+  // 2. AI parse — reserve quota + create the ai_tasks row atomically so two
+  // concurrent uploads can't both slip past the limit.
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "upload",
+    plan,
+    inputJson: { fileName: file.name, fileSize: file.size },
+  });
+  if (!reserved.ok) {
+    return { ok: false, error: reserved.error };
+  }
+  const task = { id: reserved.taskId };
 
   let parsedContent;
   try {

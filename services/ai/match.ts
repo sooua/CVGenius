@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 import { matchResultSchema, type MatchResult } from "./schemas";
 
 interface MatchInput {
@@ -39,13 +40,17 @@ export async function runJobMatch(
   const jd = input.jobDescription.trim();
   if (!jd) throw new Error("JD 为空");
 
-  const result = await generateObject({
-    model: pickModel("quality"),
-    schema: matchResultSchema,
-    system: SYSTEM_PROMPT,
-    prompt: `岗位描述（JD）：\n${jd.slice(0, 6000)}\n\n简历结构化内容：\n${JSON.stringify(input.resumeJson, null, 2)}`,
-    temperature: 0.25,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateObject({
+      model: pickModel("quality"),
+      schema: matchResultSchema,
+      system: SYSTEM_PROMPT,
+      prompt: `岗位描述（JD）：\n${jd.slice(0, 6000)}\n\n简历结构化内容：\n${JSON.stringify(input.resumeJson, null, 2)}`,
+      temperature: 0.25,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     result: result.object,

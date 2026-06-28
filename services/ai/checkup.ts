@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 import { checkupResultSchema, type CheckupResult } from "./schemas";
 
 interface CheckupInput {
@@ -31,13 +32,17 @@ const SYSTEM_PROMPT = `你是一位看过上千份应届生简历的前招聘负
 export async function runCheckup(
   input: CheckupInput,
 ): Promise<CheckupRunResult> {
-  const result = await generateObject({
-    model: pickModel("quality"),
-    schema: checkupResultSchema,
-    system: SYSTEM_PROMPT,
-    prompt: `目标岗位方向：${input.jobCategory || "通用"}\n\n简历结构化内容：\n${JSON.stringify(input.resumeJson, null, 2)}`,
-    temperature: 0.3,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateObject({
+      model: pickModel("quality"),
+      schema: checkupResultSchema,
+      system: SYSTEM_PROMPT,
+      prompt: `目标岗位方向：${input.jobCategory || "通用"}\n\n简历结构化内容：\n${JSON.stringify(input.resumeJson, null, 2)}`,
+      temperature: 0.3,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     result: result.object,

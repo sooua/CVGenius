@@ -5,7 +5,6 @@ import { aiTasks } from "@/db/schema/aiTasks";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { openBillingPortal } from "@/app/actions/billing";
 import {
-  cloneResume,
   createExampleResume,
   createResume,
   listResumes,
@@ -13,15 +12,7 @@ import {
 import { parseResumeContent } from "@/lib/resume/schema";
 import { AI_QUOTAS, getMonthlyAiUsage } from "@/lib/ai/quota";
 import { checkupResultSchema } from "@/services/ai/schemas";
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
+import { ResumeList, type ResumeListItem } from "./ResumeList";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -51,6 +42,22 @@ export default async function DashboardPage() {
     user.id,
   );
   const isPro = user.plan === "pro";
+
+  const resumeItems: ResumeListItem[] = resumes.map((resume) => {
+    const content = parseResumeContent(resume.currentVersionJson);
+    return {
+      id: resume.id,
+      title:
+        content.basicInfo.name ||
+        content.basicInfo.headline ||
+        "未命名简历",
+      subtitle: content.basicInfo.headline || "还没有写个人定位",
+      targetRole: content.targetRole?.trim() || "",
+      score: latestCheckupByResume.get(resume.id) ?? null,
+      updatedAt: resume.updatedAt.toISOString(),
+      createdAt: resume.createdAt.toISOString(),
+    };
+  });
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -91,7 +98,7 @@ export default async function DashboardPage() {
             </p>
             <p className="text-[13.5px] text-olive-gray max-w-md mx-auto leading-relaxed mb-6">
               从示例开始最快——我们预填了一份完整的应届生简历，照着改就行；
-              或者点"新建简历"从空白开始。
+              或者点「新建简历」从空白开始。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
               <form action={createExampleResume}>
@@ -113,74 +120,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {resumes.map((resume) => {
-              const content = parseResumeContent(resume.currentVersionJson);
-              const title =
-                content.basicInfo.name ||
-                content.basicInfo.headline ||
-                "未命名简历";
-              const subtitle =
-                content.basicInfo.headline || "还没有写个人定位";
-              const targetRole = content.targetRole?.trim() || "";
-              const score = latestCheckupByResume.get(resume.id);
-              const cloneThis = cloneResume.bind(null, resume.id);
-              return (
-                <li
-                  key={resume.id}
-                  className="group rounded-2xl bg-ivory ring-1 ring-border-warm hover:ring-terracotta transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-20px_rgba(20,20,19,0.2)] flex items-center"
-                >
-                  <Link
-                    href={`/resume/${resume.id}`}
-                    className="flex-1 min-w-0 px-6 py-5"
-                  >
-                    <div className="flex items-baseline justify-between gap-4 mb-1.5">
-                      <p className="font-serif text-[17px] text-near-black truncate">
-                        {title}
-                      </p>
-                      <span className="text-[12px] text-stone-gray shrink-0">
-                        {formatDate(resume.updatedAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <p className="text-[13.5px] text-olive-gray truncate min-w-0">
-                        {subtitle}
-                      </p>
-                      {targetRole ? (
-                        <span
-                          className="shrink-0 inline-flex items-center rounded-full ring-1 ring-border-warm bg-parchment px-2 py-0.5 text-[11px] text-charcoal-warm"
-                          title="目标岗位"
-                        >
-                          → {targetRole}
-                        </span>
-                      ) : null}
-                      {score !== undefined ? (
-                        <CheckupBadge score={score} />
-                      ) : null}
-                    </div>
-                  </Link>
-                  <div className="shrink-0 mr-3 md:mr-4 flex items-center gap-1.5 md:opacity-0 md:group-hover:opacity-100 transition">
-                    <form action={cloneThis}>
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12px] text-charcoal-warm hover:bg-border-cream transition"
-                        title="克隆成新版本"
-                      >
-                        克隆
-                      </button>
-                    </form>
-                    <a
-                      href={`/api/resumes/${resume.id}/pdf`}
-                      className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12px] text-charcoal-warm hover:bg-border-cream transition"
-                      title="导出 PDF"
-                    >
-                      PDF
-                    </a>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <ResumeList items={resumeItems} />
         )}
       </section>
 
@@ -250,24 +190,6 @@ export default async function DashboardPage() {
         </div>
       </section>
     </div>
-  );
-}
-
-function CheckupBadge({ score }: { score: number }) {
-  const tone =
-    score >= 80
-      ? "text-terracotta bg-terracotta/10 ring-terracotta/20"
-      : score >= 60
-        ? "text-charcoal-warm bg-warm-sand ring-border-warm"
-        : "text-olive-gray bg-border-cream ring-border-warm";
-  return (
-    <span
-      className={`shrink-0 inline-flex items-center gap-1 rounded-full ring-1 px-2 py-0.5 text-[11px] ${tone}`}
-      title="上次体检分数"
-    >
-      <span className="opacity-70">体检</span>
-      <span className="font-medium tabular-nums">{score}</span>
-    </span>
   );
 }
 

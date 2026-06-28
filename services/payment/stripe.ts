@@ -111,6 +111,16 @@ export const stripeProvider: PaymentProvider = {
     return { url: session.url };
   },
 
+  async cancelActiveSubscriptions(customerId: string): Promise<void> {
+    const s = assertStripe();
+    const subs = await s.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 100,
+    });
+    await Promise.all(subs.data.map((sub) => s.subscriptions.cancel(sub.id)));
+  },
+
   async verifyAndParseWebhook(req: Request): Promise<WebhookEvent> {
     const s = assertStripe();
     const sig = req.headers.get("stripe-signature");

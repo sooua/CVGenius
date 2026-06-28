@@ -8,27 +8,60 @@ import { z } from "zod";
  * Client components must NOT import from here — use `@/lib/env` for the
  * NEXT_PUBLIC_* subset instead.
  */
-const serverSchema = z.object({
-  // Database
-  DATABASE_URL: z.string().url(),
+// Treat an empty string the same as "unset" — `FOO=` in a .env file yields ""
+// which would otherwise trip .min(1) even where the value is meant to be absent.
+const optionalSecret = z.preprocess(
+  (v) => (v === "" ? undefined : v),
+  z.string().min(1).optional(),
+);
 
-  // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+const serverSchema = z
+  .object({
+    // Database
+    DATABASE_URL: z.string().url(),
 
-  // AI
-  DEEPSEEK_API_KEY: z.string().min(1).optional(),
-  QWEN_API_KEY: z.string().min(1).optional(),
+    // Supabase
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().min(1).optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
-  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+    // AI
+    DEEPSEEK_API_KEY: optionalSecret,
+    QWEN_API_KEY: optionalSecret,
 
-  // Site
-  NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
-});
+    // Stripe
+    STRIPE_SECRET_KEY: optionalSecret,
+    STRIPE_WEBHOOK_SECRET: optionalSecret,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: optionalSecret,
+
+    // Site
+    NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
+
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
+  })
+  .superRefine((val, ctx) => {
+    // Only enforce on a real Vercel *production* deploy — not on local
+    // `next build` (which also sets NODE_ENV=production) or preview deploys.
+    // A missing payment secret should fail the deploy fast rather than 500 the
+    // first time someone hits checkout. AI keys stay optional (degrade).
+    if (process.env.VERCEL_ENV !== "production") return;
+    const required = [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    ] as const;
+    for (const key of required) {
+      if (!val[key]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} is required in production`,
+        });
+      }
+    }
+  });
 
 export const env = serverSchema.parse(process.env);
 export type Env = z.infer<typeof serverSchema>;

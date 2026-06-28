@@ -29,6 +29,9 @@ export async function POST(req: Request) {
         where: eq(orders.id, event.orderId),
       });
       if (!order) break;
+      // Stripe delivers events at-least-once; ignore replays of an order
+      // we've already marked paid so downstream side effects run once.
+      if (order.status === "paid") break;
 
       await db
         .update(orders)

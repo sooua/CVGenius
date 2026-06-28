@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 import {
   resumeContentSchema,
   type ResumeContent,
@@ -35,13 +36,17 @@ export async function parseResumeFromText(
     throw new Error("PDF 内容为空，无法解析");
   }
 
-  const result = await generateObject({
-    model: pickModel("quality"),
-    schema: resumeContentSchema,
-    system: SYSTEM_PROMPT,
-    prompt: `简历原文：\n\n${clean.slice(0, 12000)}`,
-    temperature: 0.2,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateObject({
+      model: pickModel("quality"),
+      schema: resumeContentSchema,
+      system: SYSTEM_PROMPT,
+      prompt: `简历原文：\n\n${clean.slice(0, 12000)}`,
+      temperature: 0.2,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     content: result.object,

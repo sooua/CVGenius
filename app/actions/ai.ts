@@ -6,7 +6,7 @@ import { aiTasks } from "@/db/schema/aiTasks";
 import { resumes } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { parseResumeContent } from "@/lib/resume/schema";
-import { checkQuota, getMonthlyAiUsage, getUserPlan } from "@/lib/ai/quota";
+import { getUserPlan, reserveAiTask } from "@/lib/ai/quota";
 import { rewriteBlock } from "@/services/ai/rewrite";
 import { runCheckup } from "@/services/ai/checkup";
 import { runJobMatch } from "@/services/ai/match";
@@ -43,34 +43,25 @@ export async function rewriteHighlight(input: {
     return { ok: false, error: "简历不存在或无权访问" };
   }
 
-  const [usage, plan] = await Promise.all([
-    getMonthlyAiUsage(userId),
-    getUserPlan(userId),
-  ]);
-  const quota = checkQuota(usage, "rewrite", plan);
-  if (!quota.ok) {
-    return { ok: false, error: quota.error };
-  }
-
+  const plan = await getUserPlan(userId);
   const content = parseResumeContent(resume.currentVersionJson);
   const jobCategory = content.targetRole || "通用";
 
-  const [task] = await db
-    .insert(aiTasks)
-    .values({
-      userId,
-      resumeId: input.resumeId,
-      taskType: "rewrite_block",
-      provider: "deepseek",
-      model: "pending",
-      inputJson: {
-        jobCategory,
-        original: input.text,
-        context: input.context ?? {},
-      },
-      status: "running",
-    })
-    .returning({ id: aiTasks.id });
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "rewrite",
+    plan,
+    resumeId: input.resumeId,
+    inputJson: {
+      jobCategory,
+      original: input.text,
+      context: input.context ?? {},
+    },
+  });
+  if (!reserved.ok) {
+    return { ok: false, error: reserved.error };
+  }
+  const task = { id: reserved.taskId };
 
   try {
     const result = await rewriteBlock({
@@ -123,30 +114,21 @@ export async function runResumeCheckup(
     return { ok: false, error: "简历不存在或无权访问" };
   }
 
-  const [usage, plan] = await Promise.all([
-    getMonthlyAiUsage(userId),
-    getUserPlan(userId),
-  ]);
-  const quota = checkQuota(usage, "checkup", plan);
-  if (!quota.ok) {
-    return { ok: false, error: quota.error };
-  }
-
+  const plan = await getUserPlan(userId);
   const content = parseResumeContent(resume.currentVersionJson);
   const jobCategory = content.targetRole || "通用";
 
-  const [task] = await db
-    .insert(aiTasks)
-    .values({
-      userId,
-      resumeId,
-      taskType: "checkup",
-      provider: "deepseek",
-      model: "pending",
-      inputJson: { jobCategory, resumeContent: content },
-      status: "running",
-    })
-    .returning({ id: aiTasks.id });
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "checkup",
+    plan,
+    resumeId,
+    inputJson: { jobCategory, resumeContent: content },
+  });
+  if (!reserved.ok) {
+    return { ok: false, error: reserved.error };
+  }
+  const task = { id: reserved.taskId };
 
   try {
     const run = await runCheckup({ jobCategory, resumeJson: content });
@@ -193,15 +175,6 @@ export async function runResumeMatch(input: {
 
   const { userId } = await verifySession();
 
-  const plan = await getUserPlan(userId);
-  if (!isPaidPlan(plan)) {
-    return {
-      ok: false,
-      error: "岗位匹配是 Pro 功能。升级后不限次使用。",
-      requiresUpgrade: true,
-    };
-  }
-
   const resume = await db.query.resumes.findFirst({
     where: and(
       eq(resumes.id, input.resumeId),
@@ -212,20 +185,24 @@ export async function runResumeMatch(input: {
     return { ok: false, error: "简历不存在或无权访问" };
   }
 
+  const plan = await getUserPlan(userId);
   const content = parseResumeContent(resume.currentVersionJson);
 
-  const [task] = await db
-    .insert(aiTasks)
-    .values({
-      userId,
-      resumeId: input.resumeId,
-      taskType: "match_score",
-      provider: "deepseek",
-      model: "pending",
-      inputJson: { jobDescription: jd.slice(0, 2000), resumeContent: content },
-      status: "running",
-    })
-    .returning({ id: aiTasks.id });
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "match",
+    plan,
+    resumeId: input.resumeId,
+    inputJson: { jobDescription: jd.slice(0, 2000), resumeContent: content },
+  });
+  if (!reserved.ok) {
+    return {
+      ok: false,
+      error: reserved.error,
+      requiresUpgrade: !isPaidPlan(plan),
+    };
+  }
+  const task = { id: reserved.taskId };
 
   try {
     const run = await runJobMatch({ jobDescription: jd, resumeJson: content });
@@ -268,15 +245,6 @@ export async function generateCoverLetter(input: {
 }): Promise<CoverLetterResponse> {
   const { userId } = await verifySession();
 
-  const plan = await getUserPlan(userId);
-  if (!isPaidPlan(plan)) {
-    return {
-      ok: false,
-      error: "求职信生成是 Pro 功能。升级后不限次使用。",
-      requiresUpgrade: true,
-    };
-  }
-
   const resume = await db.query.resumes.findFirst({
     where: and(
       eq(resumes.id, input.resumeId),
@@ -287,24 +255,28 @@ export async function generateCoverLetter(input: {
     return { ok: false, error: "简历不存在或无权访问" };
   }
 
+  const plan = await getUserPlan(userId);
   const content = parseResumeContent(resume.currentVersionJson);
 
-  const [task] = await db
-    .insert(aiTasks)
-    .values({
-      userId,
-      resumeId: input.resumeId,
-      taskType: "cover_letter",
-      provider: "deepseek",
-      model: "pending",
-      inputJson: {
-        resumeContent: content,
-        jobDescription: input.jobDescription?.slice(0, 2000),
-        extra: input.extra?.slice(0, 500),
-      },
-      status: "running",
-    })
-    .returning({ id: aiTasks.id });
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "coverLetter",
+    plan,
+    resumeId: input.resumeId,
+    inputJson: {
+      resumeContent: content,
+      jobDescription: input.jobDescription?.slice(0, 2000),
+      extra: input.extra?.slice(0, 500),
+    },
+  });
+  if (!reserved.ok) {
+    return {
+      ok: false,
+      error: reserved.error,
+      requiresUpgrade: !isPaidPlan(plan),
+    };
+  }
+  const task = { id: reserved.taskId };
 
   try {
     const run = await runCoverLetter({

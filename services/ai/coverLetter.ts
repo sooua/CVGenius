@@ -1,5 +1,6 @@
 import { generateText } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 
 interface CoverLetterInput {
   resumeJson: unknown;
@@ -44,12 +45,16 @@ export async function runCoverLetter(
   }
   parts.push(`简历结构化内容：\n${JSON.stringify(input.resumeJson, null, 2)}`);
 
-  const result = await generateText({
-    model: pickModel("quality"),
-    system: SYSTEM_PROMPT,
-    prompt: parts.join("\n\n"),
-    temperature: 0.55,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateText({
+      model: pickModel("quality"),
+      system: SYSTEM_PROMPT,
+      prompt: parts.join("\n\n"),
+      temperature: 0.55,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     text: result.text.trim(),

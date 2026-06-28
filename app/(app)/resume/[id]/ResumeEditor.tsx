@@ -17,9 +17,14 @@ import {
   listResumeVersions,
   restoreResumeVersion,
   saveResumeVersion,
+  setResumeTemplate,
   setShareEnabled,
   updateResume,
 } from "@/app/actions/resumes";
+import {
+  RESUME_TEMPLATES,
+  type TemplateId,
+} from "@/lib/resume/templates";
 import {
   generateCoverLetter,
   rewriteHighlight,
@@ -75,6 +80,10 @@ type QuotaSnapshot = {
   checkupLimit: number;
   uploadUsed: number;
   uploadLimit: number;
+  matchUsed: number;
+  matchLimit: number;
+  coverLetterUsed: number;
+  coverLetterLimit: number;
   plan: string;
   unlimited: boolean;
 };
@@ -82,6 +91,8 @@ type QuotaSnapshot = {
 type ShareSnapshot = {
   enabled: boolean;
   token: string | null;
+  expiresAt: string | null;
+  hasPasscode: boolean;
 };
 
 type VersionSummary = {
@@ -110,6 +121,7 @@ export function ResumeEditor({
   initialQuota,
   initialShare,
   initialVersions,
+  initialTemplate,
 }: {
   resumeId: string;
   initialContent: ResumeContent;
@@ -117,6 +129,7 @@ export function ResumeEditor({
   initialQuota: QuotaSnapshot;
   initialShare: ShareSnapshot;
   initialVersions: VersionSummary[];
+  initialTemplate: TemplateId;
 }) {
   const router = useRouter();
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
@@ -143,7 +156,12 @@ export function ResumeEditor({
     quota.unlimited || quota.rewriteUsed < quota.rewriteLimit;
   const canCheckup =
     quota.unlimited || quota.checkupUsed < quota.checkupLimit;
-  const canMatch = quota.unlimited;
+  const canMatch =
+    quota.unlimited || quota.matchUsed < quota.matchLimit;
+  const canCover =
+    quota.unlimited || quota.coverLetterUsed < quota.coverLetterLimit;
+  const matchRemaining = quota.matchLimit - quota.matchUsed;
+  const coverRemaining = quota.coverLetterLimit - quota.coverLetterUsed;
 
   const notifyRewriteResult = useCallback(
     (outcome: "success" | "quota-exceeded" | "other-error") => {
@@ -308,8 +326,19 @@ export function ResumeEditor({
     });
     if (response.ok) {
       setCover({ kind: "result", text: response.text });
+      setQuota((prev) =>
+        prev.unlimited
+          ? prev
+          : { ...prev, coverLetterUsed: prev.coverLetterUsed + 1 },
+      );
     } else {
       setCover({ kind: "error", message: response.error });
+      if (response.requiresUpgrade) {
+        setQuota((prev) => ({
+          ...prev,
+          coverLetterUsed: prev.coverLetterLimit,
+        }));
+      }
     }
   };
 
@@ -334,8 +363,14 @@ export function ResumeEditor({
     });
     if (response.ok) {
       setMatch({ kind: "result", data: response.result });
+      setQuota((prev) =>
+        prev.unlimited ? prev : { ...prev, matchUsed: prev.matchUsed + 1 },
+      );
     } else {
       setMatch({ kind: "error", message: response.error });
+      if (response.requiresUpgrade) {
+        setQuota((prev) => ({ ...prev, matchUsed: prev.matchLimit }));
+      }
     }
   };
 
@@ -401,41 +436,58 @@ export function ResumeEditor({
                   : "体检"}
           </button>
           {canMatch ? (
-            <>
-              <button
-                type="button"
-                onClick={onMatchButtonClick}
-                disabled={match.kind === "running"}
-                className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
-              >
-                {match.kind === "running" ? "匹配中…" : "匹配 JD"}
-              </button>
-              <button
-                type="button"
-                onClick={onCoverButtonClick}
-                disabled={cover.kind === "running"}
-                className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
-              >
-                {cover.kind === "running" ? "写信中…" : "求职信"}
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={onMatchButtonClick}
+              disabled={match.kind === "running"}
+              title={
+                quota.unlimited
+                  ? undefined
+                  : `免费试用 · 本月还剩 ${matchRemaining} 次`
+              }
+              className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
+            >
+              {match.kind === "running"
+                ? "匹配中…"
+                : quota.unlimited
+                  ? "匹配 JD"
+                  : `匹配 JD · 剩 ${matchRemaining}`}
+            </button>
           ) : (
-            <>
-              <Link
-                href="/billing/start"
-                title="Pro 专属 · 点击升级"
-                className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
-              >
-                匹配 JD · Pro
-              </Link>
-              <Link
-                href="/billing/start"
-                title="Pro 专属 · 点击升级"
-                className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
-              >
-                求职信 · Pro
-              </Link>
-            </>
+            <Link
+              href="/billing/start"
+              title="免费额度已用完 · 点击升级 Pro 不限次"
+              className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
+            >
+              匹配 JD · Pro
+            </Link>
+          )}
+          {canCover ? (
+            <button
+              type="button"
+              onClick={onCoverButtonClick}
+              disabled={cover.kind === "running"}
+              title={
+                quota.unlimited
+                  ? undefined
+                  : `免费试用 · 本月还剩 ${coverRemaining} 次`
+              }
+              className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
+            >
+              {cover.kind === "running"
+                ? "写信中…"
+                : quota.unlimited
+                  ? "求职信"
+                  : `求职信 · 剩 ${coverRemaining}`}
+            </button>
+          ) : (
+            <Link
+              href="/billing/start"
+              title="免费额度已用完 · 点击升级 Pro 不限次"
+              className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
+            >
+              求职信 · Pro
+            </Link>
           )}
           <ExportDropdown resumeId={resumeId} canEnglish={canMatch} />
         </div>
@@ -452,7 +504,7 @@ export function ResumeEditor({
           }
         />
         <p className="mt-2 text-[12px] text-stone-gray leading-relaxed">
-          点下面的标签直接填入，或者在输入框里写得更具体（例如"前端工程师 · React 方向"）。
+          点下面的标签直接填入，或者在输入框里写得更具体（例如「前端工程师 · React 方向」）。
           留空会按「通用」方向写。
         </p>
       </Section>
@@ -866,6 +918,17 @@ export function ResumeEditor({
           onDismiss={() => setCover({ kind: "idle" })}
         />
       )}
+
+      <TemplatePanel
+        resumeId={resumeId}
+        initialTemplate={initialTemplate}
+        flushPendingSave={async () => {
+          if (saveState.kind === "dirty" || saveState.kind === "saving") {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            await flushSave();
+          }
+        }}
+      />
 
       <SharePanel resumeId={resumeId} initial={initialShare} />
 
@@ -1354,7 +1417,7 @@ function MatchPanel({
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">岗位匹配 · Pro</p>
+          <p className="overline mb-1.5">岗位匹配</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "input"
               ? "贴一段 JD，对比一下"
@@ -1654,7 +1717,7 @@ function CoverLetterPanel({
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">求职信 · Pro</p>
+          <p className="overline mb-1.5">求职信</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "input"
               ? "写一封打动 HR 的求职信"
@@ -1907,6 +1970,121 @@ function VersionsPanel({
   );
 }
 
+function TemplatePanel({
+  resumeId,
+  initialTemplate,
+  flushPendingSave,
+}: {
+  resumeId: string;
+  initialTemplate: TemplateId;
+  flushPendingSave: () => Promise<void>;
+}) {
+  const [template, setTemplate] = useState<TemplateId>(initialTemplate);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [version, setVersion] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [, startSave] = useTransition();
+
+  const previewSrc = `/api/resumes/${resumeId}/pdf?template=${template}&v=${version}`;
+
+  const openOrRefresh = async () => {
+    setLoading(true);
+    await flushPendingSave();
+    setVersion((v) => v + 1);
+    setPreviewOpen(true);
+  };
+
+  const choose = (id: TemplateId) => {
+    if (id === template) return;
+    setTemplate(id);
+    // Persist the choice; export + share PDFs read it from the row.
+    startSave(() => {
+      setResumeTemplate(resumeId, id);
+    });
+    if (previewOpen) {
+      setLoading(true);
+      setVersion((v) => v + 1);
+    }
+  };
+
+  return (
+    <section className="rounded-3xl bg-ivory ring-1 ring-border-warm px-6 md:px-8 py-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <p className="overline mb-1.5">外观</p>
+          <h2 className="font-serif text-[17px] text-near-black">
+            选一个模板，看看导出长什么样
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={openOrRefresh}
+          className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
+        >
+          {previewOpen ? "刷新预览" : "预览"}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2.5">
+        {RESUME_TEMPLATES.map((tpl) => {
+          const active = tpl.id === template;
+          return (
+            <button
+              key={tpl.id}
+              type="button"
+              onClick={() => choose(tpl.id)}
+              className={
+                "rounded-2xl px-4 py-3 text-left ring-1 transition " +
+                (active
+                  ? "bg-parchment ring-terracotta"
+                  : "bg-white ring-border-warm hover:ring-terracotta")
+              }
+            >
+              <p className="font-serif text-[14.5px] text-near-black mb-0.5">
+                {tpl.name}
+              </p>
+              <p className="text-[11.5px] text-stone-gray leading-snug">
+                {tpl.desc}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+
+      {previewOpen && (
+        <div className="motion-slide-in-soft mt-4">
+          <iframe
+            key={version}
+            src={previewSrc}
+            title="简历预览"
+            onLoad={() => setLoading(false)}
+            className="w-full h-[70vh] rounded-xl ring-1 ring-border-warm bg-white"
+          />
+          <p className="mt-2 text-[12px] text-stone-gray">
+            {loading
+              ? "正在生成预览…"
+              : "预览反映已保存的内容。改了内容后点「刷新预览」。"}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+const SHARE_EXPIRY_OPTIONS: { label: string; days: number | null }[] = [
+  { label: "永久", days: null },
+  { label: "7 天", days: 7 },
+  { label: "30 天", days: 30 },
+];
+
+function formatExpiry(iso: string) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
 function SharePanel({
   resumeId,
   initial,
@@ -1918,22 +2096,49 @@ function SharePanel({
   const [pending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expiryDays, setExpiryDays] = useState<number | null>(
+    initial.expiresAt ? 7 : null,
+  );
+  const [passcode, setPasscode] = useState("");
 
-  const url = state.enabled && state.token
-    ? `${clientEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/r/${state.token}`
-    : null;
+  const url =
+    state.enabled && state.token
+      ? `${clientEnv.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/r/${state.token}`
+      : null;
 
-  const toggle = (nextEnabled: boolean) => {
+  const run = (enabled: boolean, options?: Parameters<typeof setShareEnabled>[2]) => {
     setError(null);
     startTransition(async () => {
-      const res = await setShareEnabled(resumeId, nextEnabled);
+      const res = await setShareEnabled(resumeId, enabled, options);
       if (res.ok) {
-        setState({ enabled: nextEnabled, token: res.token ?? state.token });
+        setState({
+          enabled,
+          token: res.token ?? state.token,
+          expiresAt: res.expiresAt,
+          hasPasscode: res.hasPasscode,
+        });
+        setPasscode("");
       } else {
         setError(res.error);
       }
     });
   };
+
+  // First-time enable / re-enable carries the chosen expiry + passcode.
+  const enableWithSettings = () =>
+    run(true, {
+      expiresInDays: expiryDays,
+      passcode: passcode.trim() ? passcode : null,
+    });
+
+  // Re-apply settings on a live link; blank passcode keeps the existing one.
+  const saveSettings = () =>
+    run(true, {
+      expiresInDays: expiryDays,
+      ...(passcode.trim() ? { passcode } : {}),
+    });
+
+  const removePasscode = () => run(true, { passcode: null });
 
   const copy = async () => {
     if (!url) return;
@@ -1955,27 +2160,20 @@ function SharePanel({
             给 HR 一个链接，而不是一份附件
           </h2>
         </div>
-        <button
-          type="button"
-          onClick={() => toggle(!state.enabled)}
-          disabled={pending}
-          className={
-            "rounded-lg px-3 py-1.5 text-[12.5px] transition disabled:opacity-60 " +
-            (state.enabled
-              ? "bg-warm-sand text-charcoal-warm hover:bg-border-cream"
-              : "bg-terracotta text-ivory hover:bg-coral")
-          }
-        >
-          {pending
-            ? "处理中…"
-            : state.enabled
-              ? "关闭分享"
-              : "生成分享链接"}
-        </button>
+        {state.enabled ? (
+          <button
+            type="button"
+            onClick={() => run(false)}
+            disabled={pending}
+            className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition disabled:opacity-60"
+          >
+            {pending ? "处理中…" : "关闭分享"}
+          </button>
+        ) : null}
       </div>
 
       {state.enabled && url ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
             <input
               readOnly
@@ -1991,21 +2189,144 @@ function SharePanel({
               {copied ? "已复制" : "复制"}
             </button>
           </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-[12px]">
+            <span className="text-stone-gray">
+              {state.expiresAt
+                ? `${formatExpiry(state.expiresAt)} 过期`
+                : "永久有效"}
+            </span>
+            <span className="text-border-cream">·</span>
+            {state.hasPasscode ? (
+              <span className="inline-flex items-center gap-1 text-terracotta">
+                已设访问码
+                <button
+                  type="button"
+                  onClick={removePasscode}
+                  disabled={pending}
+                  className="text-stone-gray hover:text-error underline disabled:opacity-60"
+                >
+                  移除
+                </button>
+              </span>
+            ) : (
+              <span className="text-stone-gray">无访问码</span>
+            )}
+          </div>
+
+          <ShareSettings
+            expiryDays={expiryDays}
+            onExpiryChange={setExpiryDays}
+            passcode={passcode}
+            onPasscodeChange={setPasscode}
+            hasPasscode={state.hasPasscode}
+            pending={pending}
+            onSave={saveSettings}
+            saveLabel="更新设置"
+          />
+
           <p className="text-[12px] text-stone-gray leading-relaxed">
-            任何拿到这个链接的人都能直接查看你最新版本的 PDF。每次编辑器改动会
-            在大约 1 分钟内同步过去（CDN 缓存）。
+            拿到链接的人能查看你最新版本的 PDF；设了访问码则需先输入。编辑会在约
+            1 分钟内同步过去。
           </p>
         </div>
       ) : (
-        <p className="text-[13px] text-olive-gray leading-relaxed">
-          开启后生成一个只读链接，对方不需要登录。想关的时候随时关，旧链接会立刻失效。
-        </p>
+        <div className="space-y-4">
+          <p className="text-[13px] text-olive-gray leading-relaxed">
+            开启后生成一个只读链接，对方不需要登录。可以设过期时间和访问码，随时关闭。
+          </p>
+          <ShareSettings
+            expiryDays={expiryDays}
+            onExpiryChange={setExpiryDays}
+            passcode={passcode}
+            onPasscodeChange={setPasscode}
+            hasPasscode={false}
+            pending={pending}
+            onSave={enableWithSettings}
+            saveLabel={pending ? "生成中…" : "生成分享链接"}
+            primary
+          />
+        </div>
       )}
 
       {error ? (
         <p className="mt-2 text-[12.5px] text-error">{error}</p>
       ) : null}
     </section>
+  );
+}
+
+function ShareSettings({
+  expiryDays,
+  onExpiryChange,
+  passcode,
+  onPasscodeChange,
+  hasPasscode,
+  pending,
+  onSave,
+  saveLabel,
+  primary,
+}: {
+  expiryDays: number | null;
+  onExpiryChange: (days: number | null) => void;
+  passcode: string;
+  onPasscodeChange: (v: string) => void;
+  hasPasscode: boolean;
+  pending: boolean;
+  onSave: () => void;
+  saveLabel: string;
+  primary?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl bg-parchment ring-1 ring-border-warm px-4 py-4 space-y-3">
+      <div>
+        <p className="text-[12px] text-olive-gray mb-1.5 tracking-wide">
+          有效期
+        </p>
+        <div className="flex gap-1.5">
+          {SHARE_EXPIRY_OPTIONS.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => onExpiryChange(opt.days)}
+              className={
+                "rounded-lg px-3 py-1.5 text-[12.5px] ring-1 transition " +
+                (expiryDays === opt.days
+                  ? "bg-terracotta text-ivory ring-terracotta"
+                  : "bg-white text-charcoal-warm ring-border-warm hover:ring-terracotta")
+              }
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-[12px] text-olive-gray mb-1.5 tracking-wide">
+          访问码（可选）
+        </p>
+        <input
+          value={passcode}
+          onChange={(e) => onPasscodeChange(e.target.value)}
+          placeholder={hasPasscode ? "留空保持不变，输入则更新" : "例如 4-6 位数字"}
+          maxLength={12}
+          className="w-full rounded-lg bg-white ring-1 ring-border-warm px-3 py-2 text-[13.5px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={pending}
+        className={
+          "rounded-lg px-4 py-2 text-[13px] transition disabled:opacity-60 " +
+          (primary
+            ? "bg-terracotta text-ivory hover:bg-coral font-medium"
+            : "bg-warm-sand text-charcoal-warm hover:bg-border-cream")
+        }
+      >
+        {saveLabel}
+      </button>
+    </div>
   );
 }
 

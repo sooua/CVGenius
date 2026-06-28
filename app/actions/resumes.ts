@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { resumes, resumeVersions } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
+import { hashPasscode } from "@/lib/share";
+import { normalizeTemplate, type TemplateId } from "@/lib/resume/templates";
 import {
   emptyResumeContent,
   parseResumeContent,
@@ -99,15 +101,67 @@ export async function deleteResume(id: string) {
   redirect("/dashboard");
 }
 
+export async function setResumeTemplate(
+  id: string,
+  template: TemplateId,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { userId } = await verifySession();
+  const result = await db
+    .update(resumes)
+    .set({ template: normalizeTemplate(template), updatedAt: new Date() })
+    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+    .returning({ id: resumes.id });
+  if (!result[0]) return { ok: false, error: "简历不存在或无权编辑" };
+  revalidatePath(`/resume/${id}`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/** Same delete, but for in-list use: returns a result instead of redirecting. */
+export async function removeResume(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { userId } = await verifySession();
+  const result = await db
+    .delete(resumes)
+    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+    .returning({ id: resumes.id });
+  if (!result[0]) return { ok: false, error: "简历不存在或无权删除" };
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export type ShareSettings = {
+  /** Days until the link expires. null = never. Omit to keep current value. */
+  expiresInDays?: number | null;
+  /** New passcode. null/"" clears it. Omit to keep current value. */
+  passcode?: string | null;
+};
+
+export type ShareActionResult =
+  | {
+      ok: true;
+      token: string | null;
+      expiresAt: string | null;
+      hasPasscode: boolean;
+    }
+  | { ok: false; error: string };
+
 export async function setShareEnabled(
   id: string,
   enabled: boolean,
-): Promise<{ ok: true; token: string | null } | { ok: false; error: string }> {
+  options?: ShareSettings,
+): Promise<ShareActionResult> {
   const { userId } = await verifySession();
 
   const existing = await db.query.resumes.findFirst({
     where: and(eq(resumes.id, id), eq(resumes.userId, userId)),
-    columns: { id: true, shareToken: true },
+    columns: {
+      id: true,
+      shareToken: true,
+      shareExpiresAt: true,
+      sharePasscode: true,
+    },
   });
   if (!existing) return { ok: false, error: "简历不存在或无权编辑" };
 
@@ -115,17 +169,41 @@ export async function setShareEnabled(
     ? existing.shareToken ?? generateShareToken()
     : existing.shareToken;
 
+  // Resolve expiry: omitted → keep; null → never; number → now + N days.
+  let expiresAt = existing.shareExpiresAt ?? null;
+  if (options && "expiresInDays" in options) {
+    const days = options.expiresInDays;
+    expiresAt =
+      days == null
+        ? null
+        : new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  }
+
+  // Resolve passcode: omitted → keep; null/"" → clear; string → hash.
+  let passcode = existing.sharePasscode ?? null;
+  if (options && "passcode" in options) {
+    const raw = options.passcode?.trim();
+    passcode = raw ? hashPasscode(raw) : null;
+  }
+
   await db
     .update(resumes)
     .set({
       shareEnabled: enabled,
       shareToken: token,
+      shareExpiresAt: expiresAt,
+      sharePasscode: passcode,
       updatedAt: new Date(),
     })
     .where(and(eq(resumes.id, id), eq(resumes.userId, userId)));
 
   revalidatePath(`/resume/${id}`);
-  return { ok: true, token: enabled ? token : null };
+  return {
+    ok: true,
+    token: enabled ? token : null,
+    expiresAt: expiresAt ? expiresAt.toISOString() : null,
+    hasPasscode: passcode !== null,
+  };
 }
 
 export async function saveResumeVersion(

@@ -6,7 +6,7 @@ import { orders } from "@/db/schema/orders";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { signOut } from "@/app/actions/auth";
 import { openBillingPortal } from "@/app/actions/billing";
-import { AccountForms } from "./AccountForms";
+import { AccountForms, DataAndDanger } from "./AccountForms";
 
 export const metadata: Metadata = {
   title: "账户",
@@ -127,6 +127,8 @@ export default async function AccountPage() {
           </button>
         </form>
       </section>
+
+      <DataAndDanger email={user.email} />
     </div>
   );
 }

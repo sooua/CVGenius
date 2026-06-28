@@ -16,6 +16,7 @@ import {
   type ResumeContent,
   type SkillGroup,
 } from "@/lib/resume/schema";
+import { normalizeTemplate, type TemplateId } from "@/lib/resume/templates";
 
 export type PdfLocale = "zh" | "en";
 
@@ -71,202 +72,206 @@ Font.register({
 // Disable automatic hyphenation — it mangles CJK word boundaries.
 Font.registerHyphenationCallback((word) => [word]);
 
-const c = {
-  ink: "#141413",
-  body: "#3D3D3A",
-  muted: "#5E5D59",
-  faint: "#87867F",
-  accent: "#C96442",
-  separator: "#C0BFB8",
+type HeaderStyle = "bar" | "underline" | "filled";
+
+type Theme = {
+  accent: string;
+  ink: string;
+  body: string;
+  muted: string;
+  faint: string;
+  separator: string;
+  nameFont: "NotoSerifSC" | "NotoSansSC";
+  headerStyle: HeaderStyle;
+  sectionTitleColor: string;
+  uppercaseSections: boolean;
 };
 
-const styles = StyleSheet.create({
-  page: {
-    paddingTop: 48,
-    paddingBottom: 48,
-    paddingHorizontal: 56,
-    fontFamily: "NotoSansSC",
-    fontSize: 10.5,
-    color: c.body,
-    lineHeight: 1.5,
-    display: "flex",
-    flexDirection: "column",
-    gap: 18,
+const THEMES: Record<TemplateId, Theme> = {
+  classic: {
+    accent: "#C96442",
+    ink: "#141413",
+    body: "#3D3D3A",
+    muted: "#5E5D59",
+    faint: "#87867F",
+    separator: "#C0BFB8",
+    nameFont: "NotoSerifSC",
+    headerStyle: "bar",
+    sectionTitleColor: "#141413",
+    uppercaseSections: false,
   },
+  minimal: {
+    // Monochrome, ATS-friendly — accent collapses to ink so nothing is colored.
+    accent: "#141413",
+    ink: "#141413",
+    body: "#33332F",
+    muted: "#55554F",
+    faint: "#8A8982",
+    separator: "#D2D1CA",
+    nameFont: "NotoSerifSC",
+    headerStyle: "underline",
+    sectionTitleColor: "#141413",
+    uppercaseSections: true,
+  },
+  modern: {
+    accent: "#3E4C59",
+    ink: "#1F2933",
+    body: "#3A4750",
+    muted: "#52606D",
+    faint: "#7B8794",
+    separator: "#CBD2D9",
+    nameFont: "NotoSerifSC",
+    headerStyle: "filled",
+    sectionTitleColor: "#FFFFFF",
+    uppercaseSections: true,
+  },
+};
 
-  // Header
-  headerBlock: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 4,
-  },
-  overline: {
-    fontSize: 9.5,
-    color: c.accent,
-    letterSpacing: 0.6,
-  },
-  name: {
-    fontFamily: "NotoSerifSC",
-    fontSize: 32,
-    lineHeight: 1.18,
-    color: c.ink,
-  },
-  headline: {
-    fontSize: 13,
-    color: c.muted,
-    lineHeight: 1.45,
-  },
+function makeStyles(t: Theme) {
+  return StyleSheet.create({
+    page: {
+      paddingTop: 48,
+      paddingBottom: 48,
+      paddingHorizontal: 56,
+      fontFamily: "NotoSansSC",
+      fontSize: 10.5,
+      color: t.body,
+      lineHeight: 1.5,
+      display: "flex",
+      flexDirection: "column",
+      gap: 18,
+    },
 
-  // Contact row
-  contactRow: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 6,
-  },
-  contactItem: {
-    fontSize: 10,
-    color: c.faint,
-  },
-  contactSep: {
-    fontSize: 10,
-    color: c.separator,
-  },
+    headerBlock: { display: "flex", flexDirection: "column", gap: 4 },
+    overline: { fontSize: 9.5, color: t.accent, letterSpacing: 0.6 },
+    name: {
+      fontFamily: t.nameFont,
+      fontSize: 32,
+      lineHeight: 1.18,
+      color: t.ink,
+    },
+    headline: { fontSize: 13, color: t.muted, lineHeight: 1.45 },
 
-  // Accent rule
-  rule: {
-    width: 36,
-    height: 1.5,
-    backgroundColor: c.accent,
-  },
+    contactRow: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      alignItems: "center",
+      gap: 6,
+    },
+    contactItem: { fontSize: 10, color: t.faint },
+    contactSep: { fontSize: 10, color: t.separator },
 
-  // Summary
-  summary: {
-    fontSize: 10.5,
-    color: c.muted,
-    lineHeight: 1.65,
-  },
+    rule: { width: 36, height: 1.5, backgroundColor: t.accent },
 
-  // Target role overline under rule (if summary absent)
-  targetRoleLine: {
-    fontSize: 9.5,
-    color: c.faint,
-    letterSpacing: 0.4,
-  },
+    summary: { fontSize: 10.5, color: t.muted, lineHeight: 1.65 },
+    targetRoleLine: { fontSize: 9.5, color: t.faint, letterSpacing: 0.4 },
 
-  // Section header row
-  sectionHeader: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  sectionBar: {
-    width: 3,
-    height: 11,
-    backgroundColor: c.accent,
-  },
-  sectionTitle: {
-    fontFamily: "NotoSerifSC",
-    fontSize: 13,
-    color: c.ink,
-    lineHeight: 1.2,
-  },
+    // Section header — "bar"
+    sectionHeaderBar: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 8,
+    },
+    sectionBar: { width: 3, height: 11, backgroundColor: t.accent },
 
-  // Experience card
-  expCard: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 4,
-    marginBottom: 10,
-  },
-  expTitleRow: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  expTitle: {
-    fontFamily: "NotoSerifSC",
-    fontSize: 12.5,
-    color: c.ink,
-    lineHeight: 1.3,
-    flex: 1,
-  },
-  expDates: {
-    fontSize: 10,
-    color: c.faint,
-    letterSpacing: 0.4,
-  },
-  expMeta: {
-    fontSize: 10,
-    color: c.muted,
-    lineHeight: 1.5,
-  },
+    // Section header — "underline"
+    sectionHeaderUnderline: {
+      marginBottom: 8,
+      paddingBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: t.separator,
+    },
 
-  // Highlights
-  highlightsGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 3,
-    paddingTop: 4,
-  },
-  highlightRow: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 8,
-  },
-  highlightBullet: {
-    fontSize: 11,
-    color: c.accent,
-    lineHeight: 1.6,
-  },
-  highlightText: {
-    fontSize: 10.5,
-    color: c.body,
-    lineHeight: 1.6,
-    flex: 1,
-  },
+    // Section header — "filled"
+    sectionHeaderFilled: {
+      marginBottom: 8,
+      alignSelf: "flex-start",
+      backgroundColor: t.accent,
+      paddingVertical: 2.5,
+      paddingHorizontal: 7,
+      borderRadius: 3,
+    },
 
-  // Two-column rows (skill / award / cert)
-  twoColRow: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 4,
-  },
-  colLabel: {
-    width: 72,
-    fontSize: 10,
-    color: c.faint,
-    lineHeight: 1.6,
-    letterSpacing: 0.4,
-  },
-  colBody: {
-    flex: 1,
-  },
-  colBodyText: {
-    fontSize: 10.5,
-    color: c.body,
-    lineHeight: 1.6,
-  },
-  itemTitle: {
-    fontFamily: "NotoSerifSC",
-    fontSize: 11,
-    color: c.ink,
-    lineHeight: 1.4,
-  },
-  itemMeta: {
-    fontSize: 10,
-    color: c.muted,
-    lineHeight: 1.5,
-  },
-});
+    sectionTitle: {
+      fontFamily: "NotoSerifSC",
+      fontSize: 13,
+      color: t.sectionTitleColor,
+      lineHeight: 1.2,
+      letterSpacing: t.uppercaseSections ? 1.2 : 0,
+    },
+    sectionTitleFilled: {
+      fontFamily: "NotoSansSC",
+      fontWeight: 500,
+      fontSize: 11,
+      color: t.sectionTitleColor,
+      lineHeight: 1.2,
+      letterSpacing: 1,
+    },
 
-function ContactRow({ content }: { content: ResumeContent }) {
+    expCard: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      marginBottom: 10,
+    },
+    expTitleRow: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    expTitle: {
+      fontFamily: "NotoSerifSC",
+      fontSize: 12.5,
+      color: t.ink,
+      lineHeight: 1.3,
+      flex: 1,
+    },
+    expDates: { fontSize: 10, color: t.faint, letterSpacing: 0.4 },
+    expMeta: { fontSize: 10, color: t.muted, lineHeight: 1.5 },
+
+    highlightsGroup: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 3,
+      paddingTop: 4,
+    },
+    highlightRow: { display: "flex", flexDirection: "row", gap: 8 },
+    highlightBullet: { fontSize: 11, color: t.accent, lineHeight: 1.6 },
+    highlightText: { fontSize: 10.5, color: t.body, lineHeight: 1.6, flex: 1 },
+
+    twoColRow: {
+      display: "flex",
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 4,
+    },
+    colLabel: {
+      width: 72,
+      fontSize: 10,
+      color: t.faint,
+      lineHeight: 1.6,
+      letterSpacing: 0.4,
+    },
+    colBody: { flex: 1 },
+    colBodyText: { fontSize: 10.5, color: t.body, lineHeight: 1.6 },
+    itemTitle: {
+      fontFamily: "NotoSerifSC",
+      fontSize: 11,
+      color: t.ink,
+      lineHeight: 1.4,
+    },
+    itemMeta: { fontSize: 10, color: t.muted, lineHeight: 1.5 },
+  });
+}
+
+type Styles = ReturnType<typeof makeStyles>;
+
+function ContactRow({ content, s }: { content: ResumeContent; s: Styles }) {
   const parts = [
     content.basicInfo.location,
     content.basicInfo.phone,
@@ -275,15 +280,15 @@ function ContactRow({ content }: { content: ResumeContent }) {
   ].filter((p) => p.trim());
   if (parts.length === 0) return null;
   return (
-    <View style={styles.contactRow}>
+    <View style={s.contactRow}>
       {parts.map((part, i) => (
         <View
           key={i}
           style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
         >
-          <Text style={styles.contactItem}>{part}</Text>
+          <Text style={s.contactItem}>{part}</Text>
           {i < parts.length - 1 ? (
-            <Text style={styles.contactSep}>·</Text>
+            <Text style={s.contactSep}>·</Text>
           ) : null}
         </View>
       ))}
@@ -291,11 +296,33 @@ function ContactRow({ content }: { content: ResumeContent }) {
   );
 }
 
-function SectionHeader({ label }: { label: string }) {
+function SectionHeader({
+  label,
+  s,
+  headerStyle,
+}: {
+  label: string;
+  s: Styles;
+  headerStyle: HeaderStyle;
+}) {
+  if (headerStyle === "filled") {
+    return (
+      <View style={s.sectionHeaderFilled}>
+        <Text style={s.sectionTitleFilled}>{label}</Text>
+      </View>
+    );
+  }
+  if (headerStyle === "underline") {
+    return (
+      <View style={s.sectionHeaderUnderline}>
+        <Text style={s.sectionTitle}>{label}</Text>
+      </View>
+    );
+  }
   return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionBar} />
-      <Text style={styles.sectionTitle}>{label}</Text>
+    <View style={s.sectionHeaderBar}>
+      <View style={s.sectionBar} />
+      <Text style={s.sectionTitle}>{label}</Text>
     </View>
   );
 }
@@ -303,27 +330,29 @@ function SectionHeader({ label }: { label: string }) {
 function ExperienceCard({
   exp,
   unnamedLabel,
+  s,
 }: {
   exp: Experience;
   unnamedLabel: string;
+  s: Styles;
 }) {
   const dates = [exp.startDate, exp.endDate].filter(Boolean).join(" – ");
   const meta = [exp.role, exp.org, exp.location].filter(Boolean).join(" · ");
   const highlights = exp.highlights.filter((h) => h.trim());
 
   return (
-    <View style={styles.expCard} wrap={false}>
-      <View style={styles.expTitleRow}>
-        <Text style={styles.expTitle}>{exp.title || unnamedLabel}</Text>
-        {dates ? <Text style={styles.expDates}>{dates}</Text> : null}
+    <View style={s.expCard} wrap={false}>
+      <View style={s.expTitleRow}>
+        <Text style={s.expTitle}>{exp.title || unnamedLabel}</Text>
+        {dates ? <Text style={s.expDates}>{dates}</Text> : null}
       </View>
-      {meta ? <Text style={styles.expMeta}>{meta}</Text> : null}
+      {meta ? <Text style={s.expMeta}>{meta}</Text> : null}
       {highlights.length > 0 ? (
-        <View style={styles.highlightsGroup}>
+        <View style={s.highlightsGroup}>
           {highlights.map((h, i) => (
-            <View key={i} style={styles.highlightRow}>
-              <Text style={styles.highlightBullet}>·</Text>
-              <Text style={styles.highlightText}>{h}</Text>
+            <View key={i} style={s.highlightRow}>
+              <Text style={s.highlightBullet}>·</Text>
+              <Text style={s.highlightText}>{h}</Text>
             </View>
           ))}
         </View>
@@ -336,20 +365,29 @@ function ExperienceSection({
   kind,
   items,
   locale,
+  s,
+  headerStyle,
 }: {
   kind: ExperienceKind;
   items: Experience[];
   locale: PdfLocale;
+  s: Styles;
+  headerStyle: HeaderStyle;
 }) {
   const labels = sectionLabels[locale];
   return (
     <View>
-      <SectionHeader label={pickKindLabels(locale)[kind]} />
+      <SectionHeader
+        label={pickKindLabels(locale)[kind]}
+        s={s}
+        headerStyle={headerStyle}
+      />
       {items.map((exp) => (
         <ExperienceCard
           key={exp.id}
           exp={exp}
           unnamedLabel={labels.unnamedExperience}
+          s={s}
         />
       ))}
     </View>
@@ -359,24 +397,28 @@ function ExperienceSection({
 function SkillsSection({
   skills,
   locale,
+  s,
+  headerStyle,
 }: {
   skills: SkillGroup[];
   locale: PdfLocale;
+  s: Styles;
+  headerStyle: HeaderStyle;
 }) {
   const labels = sectionLabels[locale];
   const useful = skills.filter(
-    (s) => s.category.trim() || s.items.some((i) => i.trim()),
+    (g) => g.category.trim() || g.items.some((i) => i.trim()),
   );
   if (useful.length === 0) return null;
   return (
     <View>
-      <SectionHeader label={labels.skills} />
+      <SectionHeader label={labels.skills} s={s} headerStyle={headerStyle} />
       {useful.map((g) => (
-        <View key={g.id} style={styles.twoColRow}>
-          <Text style={styles.colLabel}>
+        <View key={g.id} style={s.twoColRow}>
+          <Text style={s.colLabel}>
             {g.category || labels.fallbackCategory}
           </Text>
-          <Text style={[styles.colBodyText, { flex: 1 }]}>
+          <Text style={[s.colBodyText, { flex: 1 }]}>
             {g.items.filter((i) => i.trim()).join("  ·  ")}
           </Text>
         </View>
@@ -388,23 +430,27 @@ function SkillsSection({
 function AwardsSection({
   awards,
   locale,
+  s,
+  headerStyle,
 }: {
   awards: Award[];
   locale: PdfLocale;
+  s: Styles;
+  headerStyle: HeaderStyle;
 }) {
   const labels = sectionLabels[locale];
   const useful = awards.filter((a) => a.title.trim() || a.date.trim());
   if (useful.length === 0) return null;
   return (
     <View>
-      <SectionHeader label={labels.awards} />
+      <SectionHeader label={labels.awards} s={s} headerStyle={headerStyle} />
       {useful.map((a) => (
-        <View key={a.id} style={styles.twoColRow} wrap={false}>
-          <Text style={styles.colLabel}>{a.date}</Text>
-          <View style={styles.colBody}>
-            <Text style={styles.itemTitle}>{a.title}</Text>
+        <View key={a.id} style={s.twoColRow} wrap={false}>
+          <Text style={s.colLabel}>{a.date}</Text>
+          <View style={s.colBody}>
+            <Text style={s.itemTitle}>{a.title}</Text>
             {a.issuer.trim() ? (
-              <Text style={styles.itemMeta}>{a.issuer}</Text>
+              <Text style={s.itemMeta}>{a.issuer}</Text>
             ) : null}
           </View>
         </View>
@@ -416,24 +462,32 @@ function AwardsSection({
 function CertificationsSection({
   certs,
   locale,
+  s,
+  headerStyle,
 }: {
   certs: Certification[];
   locale: PdfLocale;
+  s: Styles;
+  headerStyle: HeaderStyle;
 }) {
   const labels = sectionLabels[locale];
   const useful = certs.filter((x) => x.title.trim() || x.date.trim());
   if (useful.length === 0) return null;
   return (
     <View>
-      <SectionHeader label={labels.certifications} />
+      <SectionHeader
+        label={labels.certifications}
+        s={s}
+        headerStyle={headerStyle}
+      />
       {useful.map((cert) => {
         const title = cert.issuer.trim()
           ? `${cert.title} · ${cert.issuer}`
           : cert.title;
         return (
-          <View key={cert.id} style={styles.twoColRow} wrap={false}>
-            <Text style={styles.colLabel}>{cert.date}</Text>
-            <Text style={[styles.itemTitle, { flex: 1 }]}>{title}</Text>
+          <View key={cert.id} style={s.twoColRow} wrap={false}>
+            <Text style={s.colLabel}>{cert.date}</Text>
+            <Text style={[s.itemTitle, { flex: 1 }]}>{title}</Text>
           </View>
         );
       })}
@@ -444,10 +498,16 @@ function CertificationsSection({
 export function ResumeDocument({
   content,
   locale = "zh",
+  template,
 }: {
   content: ResumeContent;
   locale?: PdfLocale;
+  template?: TemplateId;
 }) {
+  const theme = THEMES[normalizeTemplate(template)];
+  const s = makeStyles(theme);
+  const headerStyle = theme.headerStyle;
+
   const {
     basicInfo,
     targetRole,
@@ -474,25 +534,25 @@ export function ResumeDocument({
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.headerBlock}>
+      <Page size="A4" style={s.page}>
+        <View style={s.headerBlock}>
           {targetRole.trim() ? (
-            <Text style={styles.overline}>
+            <Text style={s.overline}>
               {labels.targetRolePrefix} · {targetRole}
             </Text>
           ) : null}
-          <Text style={styles.name}>{displayName}</Text>
+          <Text style={s.name}>{displayName}</Text>
           {basicInfo.headline.trim() ? (
-            <Text style={styles.headline}>{basicInfo.headline}</Text>
+            <Text style={s.headline}>{basicInfo.headline}</Text>
           ) : null}
         </View>
 
-        <ContactRow content={content} />
+        <ContactRow content={content} s={s} />
 
-        <View style={styles.rule} />
+        <View style={s.rule} />
 
         {summary.trim() ? (
-          <Text style={styles.summary}>{summary}</Text>
+          <Text style={s.summary}>{summary}</Text>
         ) : null}
 
         {nonEmptyKinds.map((kind) => (
@@ -501,12 +561,29 @@ export function ResumeDocument({
             kind={kind}
             items={groups[kind]}
             locale={locale}
+            s={s}
+            headerStyle={headerStyle}
           />
         ))}
 
-        <SkillsSection skills={skills} locale={locale} />
-        <AwardsSection awards={awards} locale={locale} />
-        <CertificationsSection certs={certifications} locale={locale} />
+        <SkillsSection
+          skills={skills}
+          locale={locale}
+          s={s}
+          headerStyle={headerStyle}
+        />
+        <AwardsSection
+          awards={awards}
+          locale={locale}
+          s={s}
+          headerStyle={headerStyle}
+        />
+        <CertificationsSection
+          certs={certifications}
+          locale={locale}
+          s={s}
+          headerStyle={headerStyle}
+        />
       </Page>
     </Document>
   );

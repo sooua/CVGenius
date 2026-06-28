@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 import { pickModel } from "./provider";
+import { withAiRetry } from "./call";
 import { rewriteBlockSchema, type RewriteBlock } from "./schemas";
 
 interface RewriteInput {
@@ -47,13 +48,17 @@ export async function rewriteBlock(
     .filter(Boolean)
     .join("\n");
 
-  const result = await generateObject({
-    model: pickModel("quality"),
-    schema: rewriteBlockSchema,
-    system: SYSTEM_PROMPT,
-    prompt: userPrompt,
-    temperature: 0.4,
-  });
+  const result = await withAiRetry((abortSignal) =>
+    generateObject({
+      model: pickModel("quality"),
+      schema: rewriteBlockSchema,
+      system: SYSTEM_PROMPT,
+      prompt: userPrompt,
+      temperature: 0.4,
+      abortSignal,
+      maxRetries: 0,
+    }),
+  );
 
   return {
     block: result.object,

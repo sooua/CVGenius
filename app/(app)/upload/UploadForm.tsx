@@ -12,12 +12,18 @@ type UploadState =
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
+const DOCX_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
 function validate(file: File): string | null {
-  if (
-    file.type !== "application/pdf" &&
-    !file.name.toLowerCase().endsWith(".pdf")
-  ) {
-    return "只支持 PDF 文件";
+  const name = file.name.toLowerCase();
+  const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
+  const isDocx = file.type === DOCX_TYPE || name.endsWith(".docx");
+  if (name.endsWith(".doc") && !isDocx) {
+    return "暂不支持旧版 .doc，请另存为 .docx 或导出 PDF";
+  }
+  if (!isPdf && !isDocx) {
+    return "只支持 PDF 和 Word（.docx）文件";
   }
   if (file.size > MAX_BYTES) {
     return "文件超过 5 MB";
@@ -65,7 +71,7 @@ export function UploadForm() {
     const file = state.file;
     if (!file) return;
 
-    setState({ kind: "running", file, stage: "正在读取 PDF 文字…" });
+    setState({ kind: "running", file, stage: "正在读取文件文字…" });
     // AI parse can take 15-30s; fake a stage bump halfway through for feedback
     const stageTimer = setTimeout(() => {
       setState((curr) =>
@@ -113,7 +119,7 @@ export function UploadForm() {
           ref={inputRef}
           id="upload-file"
           type="file"
-          accept="application/pdf,.pdf"
+          accept="application/pdf,.pdf,.docx"
           className="hidden"
           disabled={running}
           onChange={(e) => {
@@ -128,10 +134,10 @@ export function UploadForm() {
               ↑
             </div>
             <p className="font-serif text-[17px] text-near-black mb-1.5">
-              把 PDF 拖到这里，或者点击选择
+              把 PDF 或 Word 拖到这里，或者点击选择
             </p>
             <p className="text-[12.5px] text-stone-gray">
-              最大 5 MB · 只支持 PDF
+              最大 5 MB · 支持 PDF、Word（.docx）
             </p>
           </>
         )}
@@ -191,7 +197,7 @@ export function UploadForm() {
             onClick={reset}
             className="flex-1 rounded-xl bg-warm-sand text-charcoal-warm py-3 text-[14px] hover:bg-border-cream transition"
           >
-            换一份 PDF 重试
+            换一份重试
           </button>
         </div>
       )}
