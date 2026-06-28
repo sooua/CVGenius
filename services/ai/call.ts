@@ -1,6 +1,7 @@
 import "server-only";
 
 import { APICallError, NoObjectGeneratedError } from "ai";
+import { logError } from "@/lib/log";
 
 /**
  * Central resilience wrapper for every AI call. Without this, a slow or
@@ -72,6 +73,7 @@ export async function withAiRetry<T>(
     } catch (err) {
       lastErr = err;
       if (attempt >= attempts || !isRetriable(err)) {
+        logError("ai.call", err, { attempt, attempts });
         throw new Error(friendlyMessage(err));
       }
       // Exponential backoff; the +attempt term spreads retries a little.

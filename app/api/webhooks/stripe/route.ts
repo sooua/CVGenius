@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { orders } from "@/db/schema/orders";
 import { users } from "@/db/schema/users";
 import { resolvePaymentProvider } from "@/services/payment";
+import { logError } from "@/lib/log";
 
 // Webhook must run on Node runtime so Stripe.Event verification + DB writes work.
 export const runtime = "nodejs";
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
   try {
     event = await provider.verifyAndParseWebhook(req);
   } catch (err) {
+    logError("stripe-webhook.verify", err);
     const message = err instanceof Error ? err.message : "invalid signature";
     return NextResponse.json(
       { error: `Webhook verification failed: ${message}` },
@@ -22,6 +24,22 @@ export async function POST(req: Request) {
     );
   }
 
+  try {
+    await handleEvent(event);
+  } catch (err) {
+    // Log + 500 so Stripe retries rather than silently dropping the event.
+    logError("stripe-webhook.handle", err, { kind: event.kind });
+    return NextResponse.json({ error: "handler failed" }, { status: 500 });
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+async function handleEvent(event: Awaited<
+  ReturnType<
+    ReturnType<typeof resolvePaymentProvider>["verifyAndParseWebhook"]
+  >
+>) {
   switch (event.kind) {
     case "checkout_paid": {
       if (!event.orderId) break;
@@ -79,6 +97,4 @@ export async function POST(req: Request) {
       // Acknowledge unknown events so Stripe doesn't keep retrying.
       break;
   }
-
-  return NextResponse.json({ received: true });
 }
