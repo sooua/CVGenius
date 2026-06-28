@@ -8,15 +8,18 @@ import { verifySession } from "@/lib/auth/dal";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { getUserPlan, reserveAiTask } from "@/lib/ai/quota";
 import { rewriteBlock } from "@/services/ai/rewrite";
+import { expandHighlights } from "@/services/ai/expand";
 import { runCheckup } from "@/services/ai/checkup";
 import { runJobMatch } from "@/services/ai/match";
 import { runCoverLetter } from "@/services/ai/coverLetter";
+import { runInterviewPrep } from "@/services/ai/interview";
 import { translateResumeToEnglish } from "@/services/ai/translate";
 import { isPaidPlan } from "@/config/plans";
 import { resumeContentSchema } from "@/lib/resume/schema";
 import type { ResumeContent } from "@/lib/resume/schema";
 import type {
   CheckupResult,
+  InterviewPrepResult,
   MatchResult,
   RewriteBlock,
 } from "@/services/ai/schemas";
@@ -307,6 +310,143 @@ export async function generateCoverLetter(input: {
         errorMessage: message,
         updatedAt: new Date(),
       })
+      .where(eq(aiTasks.id, task.id));
+    return { ok: false, error: message };
+  }
+}
+
+export type ExpandResponse =
+  | { ok: true; highlights: string[]; taskId: string }
+  | { ok: false; error: string };
+
+export async function generateHighlights(input: {
+  resumeId: string;
+  description: string;
+  context?: Record<string, string>;
+}): Promise<ExpandResponse> {
+  if (!input.description.trim()) {
+    return { ok: false, error: "先用一句话写下你做了什么" };
+  }
+
+  const { userId } = await verifySession();
+
+  const resume = await db.query.resumes.findFirst({
+    where: and(eq(resumes.id, input.resumeId), eq(resumes.userId, userId)),
+  });
+  if (!resume) {
+    return { ok: false, error: "简历不存在或无权访问" };
+  }
+
+  const plan = await getUserPlan(userId);
+  const content = parseResumeContent(resume.currentVersionJson);
+  const jobCategory = content.targetRole || "通用";
+
+  // Generation shares the "rewrite" quota bucket — same "produce bullet text"
+  // category, no separate limit to reason about.
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "rewrite",
+    plan,
+    resumeId: input.resumeId,
+    inputJson: { description: input.description, context: input.context ?? {} },
+  });
+  if (!reserved.ok) {
+    return { ok: false, error: reserved.error };
+  }
+  const task = { id: reserved.taskId };
+
+  try {
+    const run = await expandHighlights({
+      jobCategory,
+      description: input.description,
+      context: input.context,
+    });
+
+    await db
+      .update(aiTasks)
+      .set({
+        status: "success",
+        model: run.modelId,
+        outputJson: run.result,
+        tokensInput: run.tokensInput,
+        tokensOutput: run.tokensOutput,
+        updatedAt: new Date(),
+      })
+      .where(eq(aiTasks.id, task.id));
+
+    return { ok: true, highlights: run.result.highlights, taskId: task.id };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "AI 生成失败";
+    await db
+      .update(aiTasks)
+      .set({ status: "failed", errorMessage: message, updatedAt: new Date() })
+      .where(eq(aiTasks.id, task.id));
+    return { ok: false, error: message };
+  }
+}
+
+export type InterviewResponse =
+  | { ok: true; result: InterviewPrepResult; taskId: string }
+  | { ok: false; error: string; requiresUpgrade?: boolean };
+
+export async function generateInterviewPrep(input: {
+  resumeId: string;
+  jobDescription?: string;
+}): Promise<InterviewResponse> {
+  const { userId } = await verifySession();
+
+  const resume = await db.query.resumes.findFirst({
+    where: and(eq(resumes.id, input.resumeId), eq(resumes.userId, userId)),
+  });
+  if (!resume) {
+    return { ok: false, error: "简历不存在或无权访问" };
+  }
+
+  const plan = await getUserPlan(userId);
+  const content = parseResumeContent(resume.currentVersionJson);
+  const jobCategory = content.targetRole || "通用";
+
+  const reserved = await reserveAiTask({
+    userId,
+    kind: "interview",
+    plan,
+    resumeId: input.resumeId,
+    inputJson: { jobDescription: input.jobDescription?.slice(0, 2000) },
+  });
+  if (!reserved.ok) {
+    return {
+      ok: false,
+      error: reserved.error,
+      requiresUpgrade: !isPaidPlan(plan),
+    };
+  }
+  const task = { id: reserved.taskId };
+
+  try {
+    const run = await runInterviewPrep({
+      jobCategory,
+      resumeJson: content,
+      jobDescription: input.jobDescription,
+    });
+
+    await db
+      .update(aiTasks)
+      .set({
+        status: "success",
+        model: run.modelId,
+        outputJson: run.result,
+        tokensInput: run.tokensInput,
+        tokensOutput: run.tokensOutput,
+        updatedAt: new Date(),
+      })
+      .where(eq(aiTasks.id, task.id));
+
+    return { ok: true, result: run.result, taskId: task.id };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "面试预测失败";
+    await db
+      .update(aiTasks)
+      .set({ status: "failed", errorMessage: message, updatedAt: new Date() })
       .where(eq(aiTasks.id, task.id));
     return { ok: false, error: message };
   }

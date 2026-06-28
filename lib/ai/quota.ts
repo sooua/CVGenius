@@ -14,6 +14,7 @@ export const AI_QUOTAS = {
   // value before paying. Pro is unlimited.
   match: 2,
   coverLetter: 2,
+  interview: 2,
 } as const;
 
 export type AiTaskKind = keyof typeof AI_QUOTAS;
@@ -24,6 +25,7 @@ export type AiUsage = {
   uploadUsed: number;
   matchUsed: number;
   coverLetterUsed: number;
+  interviewUsed: number;
 };
 
 export type AiQuotaSnapshot = AiUsage & {
@@ -32,6 +34,7 @@ export type AiQuotaSnapshot = AiUsage & {
   uploadLimit: number;
   matchLimit: number;
   coverLetterLimit: number;
+  interviewLimit: number;
   plan: string;
   /** true when quota enforcement is off (paid tiers). */
   unlimited: boolean;
@@ -43,6 +46,7 @@ const kindToColumn: Record<AiTaskKind, string> = {
   upload: "parse_upload",
   match: "match_score",
   coverLetter: "cover_letter",
+  interview: "interview_prep",
 };
 
 function startOfMonth(d = new Date()) {
@@ -59,6 +63,7 @@ function tallyUsage(rows: UsageRow[]): AiUsage {
     uploadUsed: 0,
     matchUsed: 0,
     coverLetterUsed: 0,
+    interviewUsed: 0,
   };
   for (const r of rows) {
     if (r.status === "failed") continue; // failed attempts don't count
@@ -68,6 +73,7 @@ function tallyUsage(rows: UsageRow[]): AiUsage {
     else if (r.taskType === kindToColumn.match) usage.matchUsed += 1;
     else if (r.taskType === kindToColumn.coverLetter)
       usage.coverLetterUsed += 1;
+    else if (r.taskType === kindToColumn.interview) usage.interviewUsed += 1;
   }
   return usage;
 }
@@ -101,6 +107,7 @@ export async function getAiQuotaSnapshot(
     uploadLimit: AI_QUOTAS.upload,
     matchLimit: AI_QUOTAS.match,
     coverLetterLimit: AI_QUOTAS.coverLetter,
+    interviewLimit: AI_QUOTAS.interview,
     plan,
     unlimited: isPaidPlan(plan),
   };
@@ -112,6 +119,7 @@ const quotaLabel: Record<AiTaskKind, string> = {
   upload: "PDF 解析",
   match: "岗位匹配",
   coverLetter: "求职信",
+  interview: "面试预测",
 };
 
 function usedFor(usage: AiUsage, kind: AiTaskKind): number {
@@ -126,6 +134,8 @@ function usedFor(usage: AiUsage, kind: AiTaskKind): number {
       return usage.matchUsed;
     case "coverLetter":
       return usage.coverLetterUsed;
+    case "interview":
+      return usage.interviewUsed;
   }
 }
 

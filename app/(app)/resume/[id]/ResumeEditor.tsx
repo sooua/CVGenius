@@ -41,6 +41,8 @@ import {
 } from "@/lib/resume/sections";
 import {
   generateCoverLetter,
+  generateHighlights,
+  generateInterviewPrep,
   rewriteHighlight,
   runResumeCheckup,
   runResumeMatch,
@@ -49,6 +51,8 @@ import { clientEnv } from "@/lib/env";
 import type {
   CheckupIssue,
   CheckupResult,
+  InterviewPrepResult,
+  InterviewQuestion,
   MatchResult,
   RewriteBlock,
 } from "@/services/ai/schemas";
@@ -88,6 +92,13 @@ type CoverLetterState =
   | { kind: "result"; text: string }
   | { kind: "error"; message: string };
 
+type InterviewState =
+  | { kind: "idle" }
+  | { kind: "input" }
+  | { kind: "running" }
+  | { kind: "result"; data: InterviewPrepResult }
+  | { kind: "error"; message: string };
+
 type QuotaSnapshot = {
   rewriteUsed: number;
   rewriteLimit: number;
@@ -99,6 +110,8 @@ type QuotaSnapshot = {
   matchLimit: number;
   coverLetterUsed: number;
   coverLetterLimit: number;
+  interviewUsed: number;
+  interviewLimit: number;
   plan: string;
   unlimited: boolean;
 };
@@ -168,6 +181,8 @@ export function ResumeEditor({
   const [cover, setCover] = useState<CoverLetterState>({ kind: "idle" });
   const [coverJd, setCoverJd] = useState("");
   const [coverExtra, setCoverExtra] = useState("");
+  const [interview, setInterview] = useState<InterviewState>({ kind: "idle" });
+  const [interviewJd, setInterviewJd] = useState("");
 
   const canRewrite =
     quota.unlimited || quota.rewriteUsed < quota.rewriteLimit;
@@ -177,8 +192,11 @@ export function ResumeEditor({
     quota.unlimited || quota.matchUsed < quota.matchLimit;
   const canCover =
     quota.unlimited || quota.coverLetterUsed < quota.coverLetterLimit;
+  const canInterview =
+    quota.unlimited || quota.interviewUsed < quota.interviewLimit;
   const matchRemaining = quota.matchLimit - quota.matchUsed;
   const coverRemaining = quota.coverLetterLimit - quota.coverLetterUsed;
+  const interviewRemaining = quota.interviewLimit - quota.interviewUsed;
 
   const notifyRewriteResult = useCallback(
     (outcome: "success" | "quota-exceeded" | "other-error") => {
@@ -360,6 +378,36 @@ export function ResumeEditor({
     }
   };
 
+  const onInterviewButtonClick = () => {
+    if (interview.kind === "running") return;
+    setInterview(interview.kind === "idle" ? { kind: "input" } : { kind: "idle" });
+  };
+
+  const triggerInterview = async () => {
+    if (saveState.kind === "dirty" || saveState.kind === "saving") {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      await flushSave();
+    }
+    setInterview({ kind: "running" });
+    const response = await generateInterviewPrep({
+      resumeId,
+      jobDescription: interviewJd || undefined,
+    });
+    if (response.ok) {
+      setInterview({ kind: "result", data: response.result });
+      setQuota((prev) =>
+        prev.unlimited
+          ? prev
+          : { ...prev, interviewUsed: prev.interviewUsed + 1 },
+      );
+    } else {
+      setInterview({ kind: "error", message: response.error });
+      if (response.requiresUpgrade) {
+        setQuota((prev) => ({ ...prev, interviewUsed: prev.interviewLimit }));
+      }
+    }
+  };
+
   const onMatchButtonClick = () => {
     if (match.kind === "running") return;
     if (match.kind === "idle") {
@@ -505,6 +553,33 @@ export function ResumeEditor({
               className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
             >
               求职信 · Pro
+            </Link>
+          )}
+          {canInterview ? (
+            <button
+              type="button"
+              onClick={onInterviewButtonClick}
+              disabled={interview.kind === "running"}
+              title={
+                quota.unlimited
+                  ? undefined
+                  : `免费试用 · 本月还剩 ${interviewRemaining} 次`
+              }
+              className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
+            >
+              {interview.kind === "running"
+                ? "预测中…"
+                : quota.unlimited
+                  ? "面试题"
+                  : `面试题 · 剩 ${interviewRemaining}`}
+            </button>
+          ) : (
+            <Link
+              href="/billing/start"
+              title="免费额度已用完 · 点击升级 Pro 不限次"
+              className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
+            >
+              面试题 · Pro
             </Link>
           )}
           <ExportDropdown resumeId={resumeId} canEnglish={canMatch} />
@@ -997,6 +1072,17 @@ export function ResumeEditor({
         />
       )}
 
+      {interview.kind !== "idle" && (
+        <InterviewPanel
+          state={interview}
+          jd={interviewJd}
+          onJdChange={setInterviewJd}
+          onSubmit={triggerInterview}
+          onReset={() => setInterview({ kind: "input" })}
+          onDismiss={() => setInterview({ kind: "idle" })}
+        />
+      )}
+
       <TemplatePanel
         resumeId={resumeId}
         initialTemplate={initialTemplate}
@@ -1081,6 +1167,44 @@ function HighlightsEditor({
     name: `experiences.${nestIndex}.highlights` as never,
   });
 
+  const [genText, setGenText] = useState("");
+  const [genState, setGenState] = useState<
+    { kind: "idle" } | { kind: "loading" } | { kind: "error"; message: string }
+  >({ kind: "idle" });
+
+  const generate = async () => {
+    const description = genText.trim();
+    if (!description) {
+      setGenState({ kind: "error", message: "先用一句话写下你做了什么" });
+      return;
+    }
+    if (!canRewrite) {
+      setGenState({ kind: "error", message: "本月 AI 额度已用完" });
+      return;
+    }
+    const exp = getValues(`experiences.${nestIndex}`);
+    const context: Record<string, string> = {
+      类型: experienceKindLabels[exp.kind as ExperienceKind],
+    };
+    if (exp.title) context["名称"] = exp.title;
+    if (exp.org) context["机构"] = exp.org;
+    if (exp.role) context["角色"] = exp.role;
+
+    setGenState({ kind: "loading" });
+    const res = await generateHighlights({ resumeId, description, context });
+    if (res.ok) {
+      for (const h of res.highlights) append(h as never);
+      setGenText("");
+      setGenState({ kind: "idle" });
+      onRewriteOutcome("success");
+    } else {
+      setGenState({ kind: "error", message: res.error });
+      onRewriteOutcome(
+        res.error.includes("已用完") ? "quota-exceeded" : "other-error",
+      );
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -1115,6 +1239,37 @@ function HighlightsEditor({
           ))}
         </ul>
       )}
+
+      <div className="mt-3 rounded-xl bg-parchment ring-1 ring-border-warm px-3 py-2.5">
+        <div className="flex items-start gap-2">
+          <span className="pt-2 text-[12px] text-terracotta shrink-0">✨</span>
+          <textarea
+            value={genText}
+            onChange={(e) => {
+              setGenText(e.target.value);
+              if (genState.kind === "error") setGenState({ kind: "idle" });
+            }}
+            rows={2}
+            disabled={genState.kind === "loading"}
+            placeholder="用大白话写一句你做了什么，AI 帮你扩成 2-3 条专业亮点（例：给社团做了个报名小程序，二十多个活动用过）"
+            className={`${inputClass} flex-1 resize-y text-[13px]`}
+          />
+          <button
+            type="button"
+            onClick={generate}
+            disabled={genState.kind === "loading" || !canRewrite}
+            title={canRewrite ? "AI 生成亮点" : "本月 AI 额度已用完"}
+            className="mt-0.5 shrink-0 rounded-lg bg-terracotta text-ivory px-3 py-2 text-[12px] hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {genState.kind === "loading" ? "生成中…" : "生成"}
+          </button>
+        </div>
+        {genState.kind === "error" && (
+          <p className="mt-1.5 ml-6 text-[12px] text-error">
+            {genState.message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -2474,6 +2629,155 @@ function ShareSettings({
         {saveLabel}
       </button>
     </div>
+  );
+}
+
+const INTERVIEW_CATEGORY: Record<
+  InterviewQuestion["category"],
+  { label: string; className: string }
+> = {
+  behavioral: {
+    label: "行为",
+    className: "bg-warm-sand text-charcoal-warm ring-border-warm",
+  },
+  technical: {
+    label: "技术",
+    className: "bg-terracotta/10 text-terracotta ring-terracotta/20",
+  },
+  project: {
+    label: "项目",
+    className: "bg-terracotta/10 text-terracotta ring-terracotta/20",
+  },
+  fit: {
+    label: "匹配",
+    className: "bg-warm-sand text-charcoal-warm ring-border-warm",
+  },
+};
+
+function InterviewPanel({
+  state,
+  jd,
+  onJdChange,
+  onSubmit,
+  onReset,
+  onDismiss,
+}: {
+  state: Exclude<InterviewState, { kind: "idle" }>;
+  jd: string;
+  onJdChange: (v: string) => void;
+  onSubmit: () => void;
+  onReset: () => void;
+  onDismiss: () => void;
+}) {
+  return (
+    <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-7">
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <p className="overline mb-1.5">面试题预测</p>
+          <h2 className="font-serif text-[20px] text-near-black">
+            {state.kind === "input"
+              ? "根据你的简历，预测会被问什么"
+              : state.kind === "running"
+                ? "正在按简历推演面试官的问题…"
+                : state.kind === "result"
+                  ? `为你准备了 ${state.data.questions.length} 个问题`
+                  : "面试预测失败"}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {state.kind === "result" && (
+            <button
+              type="button"
+              onClick={onReset}
+              className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
+            >
+              换个 JD 重测
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="rounded-lg text-stone-gray px-2.5 py-1.5 text-[12.5px] hover:text-near-black transition"
+          >
+            收起
+          </button>
+        </div>
+      </div>
+
+      {state.kind === "input" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
+              岗位描述（可选，贴了问题更贴岗位）
+            </label>
+            <textarea
+              value={jd}
+              onChange={(e) => onJdChange(e.target.value)}
+              rows={5}
+              placeholder="把目标岗位 JD 粘进来；不贴也行，AI 会按你的「目标岗位」出题。"
+              className="w-full rounded-xl bg-white ring-1 ring-border-warm px-4 py-3 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
+            />
+          </div>
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              onClick={onSubmit}
+              className="rounded-xl bg-terracotta text-ivory px-5 py-2 text-[13.5px] font-medium hover:bg-coral transition"
+            >
+              开始预测
+            </button>
+          </div>
+        </div>
+      )}
+
+      {state.kind === "running" && (
+        <p className="text-[13.5px] text-olive-gray leading-relaxed">
+          AI 正在通读简历、挑出最该准备的问题，一般 10-20 秒。
+        </p>
+      )}
+
+      {state.kind === "error" && (
+        <p className="text-[13.5px] text-error leading-relaxed">
+          {state.message}
+        </p>
+      )}
+
+      {state.kind === "result" && (
+        <ul className="space-y-3">
+          {state.data.questions.map((q, i) => {
+            const cat = INTERVIEW_CATEGORY[q.category];
+            return (
+              <li
+                key={i}
+                className="rounded-2xl bg-white ring-1 ring-border-warm px-5 py-4"
+              >
+                <div className="flex items-start gap-2.5 mb-2">
+                  <span
+                    className={`mt-0.5 shrink-0 rounded-md ring-1 px-2 py-0.5 text-[11px] ${cat.className}`}
+                  >
+                    {cat.label}
+                  </span>
+                  <p className="font-serif text-[15px] text-near-black leading-snug">
+                    {q.question}
+                  </p>
+                </div>
+                <p className="text-[12.5px] text-stone-gray leading-relaxed mb-1.5">
+                  考察：{q.probe}
+                </p>
+                <div className="rounded-xl bg-parchment px-4 py-2.5">
+                  <p className="text-[11px] text-terracotta tracking-wide mb-1">
+                    怎么答
+                  </p>
+                  <p className="text-[13px] text-olive-gray leading-relaxed">
+                    {q.tip}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 

@@ -13,6 +13,26 @@ export const rewriteBlockSchema = z.object({
 });
 export type RewriteBlock = z.infer<typeof rewriteBlockSchema>;
 
+export const expandResultSchema = z.object({
+  highlights: z.array(z.string()).min(1).max(5),
+});
+export type ExpandResult = z.infer<typeof expandResultSchema>;
+
+export const interviewQuestionSchema = z.object({
+  category: z.enum(["behavioral", "technical", "project", "fit"]),
+  question: z.string(),
+  /** What the interviewer is probing for. */
+  probe: z.string(),
+  /** How to approach it — which of the candidate's experiences to draw on. */
+  tip: z.string(),
+});
+export type InterviewQuestion = z.infer<typeof interviewQuestionSchema>;
+
+export const interviewPrepResultSchema = z.object({
+  questions: z.array(interviewQuestionSchema).min(3).max(12),
+});
+export type InterviewPrepResult = z.infer<typeof interviewPrepResultSchema>;
+
 export const checkupIssueSchema = z.object({
   severity: z.enum(["critical", "moderate", "suggestion"]),
   dimension: z.enum([
