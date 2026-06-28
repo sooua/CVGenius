@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from "react";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import {
   experienceKindLabels,
@@ -10,6 +11,10 @@ import {
   type SkillGroup,
 } from "@/lib/resume/schema";
 import { normalizeTemplate, type TemplateId } from "@/lib/resume/templates";
+import {
+  normalizeSectionOrder,
+  type SectionKey,
+} from "@/lib/resume/sections";
 
 export type PdfLocale = "zh" | "en";
 
@@ -514,14 +519,17 @@ export function ResumeDocument({
   content,
   locale = "zh",
   template,
+  sectionOrder,
 }: {
   content: ResumeContent;
   locale?: PdfLocale;
   template?: TemplateId;
+  sectionOrder?: SectionKey[];
 }) {
   const theme = THEMES[normalizeTemplate(template)];
   const s = makeStyles(theme);
   const headerStyle = theme.headerStyle;
+  const order = normalizeSectionOrder(sectionOrder);
 
   const {
     basicInfo,
@@ -548,6 +556,59 @@ export function ResumeDocument({
     ["project", "education", "internship"] as ExperienceKind[]
   ).filter((k) => groups[k].length > 0);
 
+  const blocks: Record<SectionKey, ReactNode> = {
+    summary: summary.trim() ? (
+      <Text style={s.summary}>{summary}</Text>
+    ) : null,
+    experience:
+      nonEmptyKinds.length > 0 ? (
+        <View>
+          {nonEmptyKinds.map((kind) => (
+            <ExperienceSection
+              key={kind}
+              kind={kind}
+              items={groups[kind]}
+              locale={locale}
+              s={s}
+              headerStyle={headerStyle}
+            />
+          ))}
+        </View>
+      ) : null,
+    skills: (
+      <SkillsSection
+        skills={skills}
+        locale={locale}
+        s={s}
+        headerStyle={headerStyle}
+      />
+    ),
+    awards: (
+      <AwardsSection
+        awards={awards}
+        locale={locale}
+        s={s}
+        headerStyle={headerStyle}
+      />
+    ),
+    certifications: (
+      <CertificationsSection
+        certs={certifications}
+        locale={locale}
+        s={s}
+        headerStyle={headerStyle}
+      />
+    ),
+    languages: (
+      <LanguagesSection
+        languages={languages}
+        locale={locale}
+        s={s}
+        headerStyle={headerStyle}
+      />
+    ),
+  };
+
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -567,45 +628,9 @@ export function ResumeDocument({
 
         <View style={s.rule} />
 
-        {summary.trim() ? (
-          <Text style={s.summary}>{summary}</Text>
-        ) : null}
-
-        {nonEmptyKinds.map((kind) => (
-          <ExperienceSection
-            key={kind}
-            kind={kind}
-            items={groups[kind]}
-            locale={locale}
-            s={s}
-            headerStyle={headerStyle}
-          />
+        {order.map((key) => (
+          <Fragment key={key}>{blocks[key]}</Fragment>
         ))}
-
-        <SkillsSection
-          skills={skills}
-          locale={locale}
-          s={s}
-          headerStyle={headerStyle}
-        />
-        <AwardsSection
-          awards={awards}
-          locale={locale}
-          s={s}
-          headerStyle={headerStyle}
-        />
-        <CertificationsSection
-          certs={certifications}
-          locale={locale}
-          s={s}
-          headerStyle={headerStyle}
-        />
-        <LanguagesSection
-          languages={languages}
-          locale={locale}
-          s={s}
-          headerStyle={headerStyle}
-        />
       </Page>
     </Document>
   );

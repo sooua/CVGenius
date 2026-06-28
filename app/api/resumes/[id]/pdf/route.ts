@@ -5,6 +5,7 @@ import { resumes } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { normalizeTemplate } from "@/lib/resume/templates";
+import { normalizeSectionOrder } from "@/lib/resume/sections";
 import { renderResumePdf } from "@/services/pdf/render";
 import { getOrGenerateEnglishVersion } from "@/app/actions/ai";
 
@@ -31,6 +32,7 @@ export async function GET(
   // back to the resume's stored choice.
   const templateParam = url.searchParams.get("template");
   const template = normalizeTemplate(templateParam ?? resume.template);
+  const sectionOrder = normalizeSectionOrder(resume.sectionOrder);
 
   let content = parseResumeContent(resume.currentVersionJson);
 
@@ -48,7 +50,7 @@ export async function GET(
     content = translation.content;
   }
 
-  const pdf = await renderResumePdf(content, lang, template);
+  const pdf = await renderResumePdf(content, lang, template, sectionOrder);
   const { ascii, unicode } = buildFilename(content.basicInfo.name, lang);
 
   return new NextResponse(pdf as unknown as BodyInit, {

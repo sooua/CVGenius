@@ -26,6 +26,7 @@ import {
   listResumeVersions,
   restoreResumeVersion,
   saveResumeVersion,
+  setResumeSectionOrder,
   setResumeTemplate,
   setShareEnabled,
   updateResume,
@@ -34,6 +35,10 @@ import {
   RESUME_TEMPLATES,
   type TemplateId,
 } from "@/lib/resume/templates";
+import {
+  SECTION_LABELS,
+  type SectionKey,
+} from "@/lib/resume/sections";
 import {
   generateCoverLetter,
   rewriteHighlight,
@@ -132,6 +137,7 @@ export function ResumeEditor({
   initialShare,
   initialVersions,
   initialTemplate,
+  initialSectionOrder,
 }: {
   resumeId: string;
   initialContent: ResumeContent;
@@ -140,6 +146,7 @@ export function ResumeEditor({
   initialShare: ShareSnapshot;
   initialVersions: VersionSummary[];
   initialTemplate: TemplateId;
+  initialSectionOrder: SectionKey[];
 }) {
   const router = useRouter();
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
@@ -993,6 +1000,7 @@ export function ResumeEditor({
       <TemplatePanel
         resumeId={resumeId}
         initialTemplate={initialTemplate}
+        initialSectionOrder={initialSectionOrder}
         control={control}
       />
 
@@ -2051,13 +2059,16 @@ const PREVIEW_DEBOUNCE_MS = 500;
 function TemplatePanel({
   resumeId,
   initialTemplate,
+  initialSectionOrder,
   control,
 }: {
   resumeId: string;
   initialTemplate: TemplateId;
+  initialSectionOrder: SectionKey[];
   control: Control<ResumeContent>;
 }) {
   const [template, setTemplate] = useState<TemplateId>(initialTemplate);
+  const [order, setOrder] = useState<SectionKey[]>(initialSectionOrder);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [, startSave] = useTransition();
 
@@ -2082,6 +2093,17 @@ function TemplatePanel({
     // Persist the choice; export + share PDFs read it from the row.
     startSave(() => {
       setResumeTemplate(resumeId, id);
+    });
+  };
+
+  const move = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= order.length) return;
+    const next = [...order];
+    [next[index], next[target]] = [next[target], next[index]];
+    setOrder(next);
+    startSave(() => {
+      setResumeSectionOrder(resumeId, next);
     });
   };
 
@@ -2132,9 +2154,51 @@ function TemplatePanel({
         })}
       </div>
 
+      <div className="mt-5">
+        <p className="text-[12px] text-olive-gray mb-2 tracking-wide">
+          模块顺序（标题区始终在最前；空模块不会出现在导出里）
+        </p>
+        <ul className="flex flex-wrap gap-1.5">
+          {order.map((key, i) => (
+            <li
+              key={key}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white ring-1 ring-border-warm pl-3 pr-1.5 py-1"
+            >
+              <span className="text-[12.5px] text-charcoal-warm">
+                {SECTION_LABELS[key]}
+              </span>
+              <span className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  title="上移"
+                  className="w-5 h-5 rounded text-[12px] text-stone-gray hover:bg-warm-sand hover:text-near-black disabled:opacity-30 disabled:pointer-events-none transition"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === order.length - 1}
+                  title="下移"
+                  className="w-5 h-5 rounded text-[12px] text-stone-gray hover:bg-warm-sand hover:text-near-black disabled:opacity-30 disabled:pointer-events-none transition"
+                >
+                  ↓
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {previewOpen && (
         <div className="motion-slide-in-soft mt-4">
-          <LivePreview content={debounced} template={template} />
+          <LivePreview
+            content={debounced}
+            template={template}
+            sectionOrder={order}
+          />
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-[12px] text-stone-gray">
               边改边看 · 预览用轻量字体，极少数生僻字可能不显示，导出 PDF 不受影响。

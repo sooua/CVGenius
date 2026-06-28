@@ -8,6 +8,7 @@ import { verifySession } from "@/lib/auth/dal";
 import { getAiQuotaSnapshot } from "@/lib/ai/quota";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { normalizeTemplate } from "@/lib/resume/templates";
+import { normalizeSectionOrder } from "@/lib/resume/sections";
 import { checkupResultSchema } from "@/services/ai/schemas";
 import { ResumeEditor } from "./ResumeEditor";
 
@@ -88,6 +89,7 @@ export default async function ResumePage({
         initialCheckup={initialCheckup}
         initialQuota={quotaSnapshot}
         initialTemplate={normalizeTemplate(resume.template)}
+        initialSectionOrder={normalizeSectionOrder(resume.sectionOrder)}
         initialShare={{
           enabled: resume.shareEnabled,
           token: resume.shareToken,

@@ -33,6 +33,8 @@ export const resumes = pgTable("resumes", {
 
   // PDF template choice (presentation only). See lib/resume/templates.ts.
   template: varchar("template", { length: 20 }).notNull().default("classic"),
+  // Section order (presentation only). null = default order. See sections.ts.
+  sectionOrder: jsonb("section_order"),
 
   shareToken: text("share_token").unique(),
   shareEnabled: boolean("share_enabled").notNull().default(false),

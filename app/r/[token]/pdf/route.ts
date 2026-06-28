@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { resumes } from "@/db/schema/resumes";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { normalizeTemplate } from "@/lib/resume/templates";
+import { normalizeSectionOrder } from "@/lib/resume/sections";
 import { isShareLive, shareCookieName } from "@/lib/share";
 import { renderResumePdf } from "@/services/pdf/render";
 
@@ -45,6 +46,7 @@ export async function GET(
     content,
     "zh",
     normalizeTemplate(resume.template),
+    normalizeSectionOrder(resume.sectionOrder),
   );
 
   return new NextResponse(pdf as unknown as BodyInit, {

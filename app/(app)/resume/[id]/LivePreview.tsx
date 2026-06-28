@@ -4,6 +4,7 @@ import { Font, PDFViewer } from "@react-pdf/renderer";
 import { ResumeDocument } from "@/services/pdf/template";
 import type { ResumeContent } from "@/lib/resume/schema";
 import type { TemplateId } from "@/lib/resume/templates";
+import type { SectionKey } from "@/lib/resume/sections";
 
 // Browser preview uses lightweight GB2312-subset fonts (~3MB total) so the
 // client render stays fast. Rare glyphs outside the subset may not show in the
@@ -36,9 +37,11 @@ function ensureFonts() {
 export default function LivePreview({
   content,
   template,
+  sectionOrder,
 }: {
   content: ResumeContent;
   template: TemplateId;
+  sectionOrder: SectionKey[];
 }) {
   ensureFonts();
   return (
@@ -52,7 +55,11 @@ export default function LivePreview({
         backgroundColor: "#ffffff",
       }}
     >
-      <ResumeDocument content={content} template={template} />
+      <ResumeDocument
+        content={content}
+        template={template}
+        sectionOrder={sectionOrder}
+      />
     </PDFViewer>
   );
 }

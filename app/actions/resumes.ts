@@ -10,6 +10,10 @@ import { verifySession } from "@/lib/auth/dal";
 import { hashPasscode } from "@/lib/share";
 import { normalizeTemplate, type TemplateId } from "@/lib/resume/templates";
 import {
+  normalizeSectionOrder,
+  type SectionKey,
+} from "@/lib/resume/sections";
+import {
   emptyResumeContent,
   parseResumeContent,
   resumeContentSchema,
@@ -114,6 +118,21 @@ export async function setResumeTemplate(
   if (!result[0]) return { ok: false, error: "简历不存在或无权编辑" };
   revalidatePath(`/resume/${id}`);
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function setResumeSectionOrder(
+  id: string,
+  order: SectionKey[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { userId } = await verifySession();
+  const result = await db
+    .update(resumes)
+    .set({ sectionOrder: normalizeSectionOrder(order), updatedAt: new Date() })
+    .where(and(eq(resumes.id, id), eq(resumes.userId, userId)))
+    .returning({ id: resumes.id });
+  if (!result[0]) return { ok: false, error: "简历不存在或无权编辑" };
+  revalidatePath(`/resume/${id}`);
   return { ok: true };
 }
 
