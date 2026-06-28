@@ -8,6 +8,7 @@ export const RESUME_TEMPLATES = [
   { id: "classic", name: "经典", desc: "衬线标题 · 暖橙强调" },
   { id: "minimal", name: "极简", desc: "黑白克制 · ATS 友好" },
   { id: "modern", name: "现代", desc: "色块标题 · 沉稳蓝灰" },
+  { id: "twocol", name: "双栏", desc: "左栏信息 · 右栏经历" },
 ] as const;
 
 export type TemplateId = (typeof RESUME_TEMPLATES)[number]["id"];

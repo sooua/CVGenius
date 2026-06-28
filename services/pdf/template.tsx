@@ -59,6 +59,7 @@ function pickKindLabels(locale: PdfLocale) {
 // and so stays isomorphic.
 
 type HeaderStyle = "bar" | "underline" | "filled";
+type Layout = "single" | "twocol";
 
 type Theme = {
   accent: string;
@@ -71,7 +72,17 @@ type Theme = {
   headerStyle: HeaderStyle;
   sectionTitleColor: string;
   uppercaseSections: boolean;
+  layout: Layout;
 };
+
+// In the two-column layout these compact sections go to the left sidebar;
+// everything else stays in the main column. Order within each column still
+// follows the user's section order.
+const SIDEBAR_SECTIONS = new Set<SectionKey>([
+  "skills",
+  "languages",
+  "certifications",
+]);
 
 const THEMES: Record<TemplateId, Theme> = {
   classic: {
@@ -85,6 +96,7 @@ const THEMES: Record<TemplateId, Theme> = {
     headerStyle: "bar",
     sectionTitleColor: "#141413",
     uppercaseSections: false,
+    layout: "single",
   },
   minimal: {
     // Monochrome, ATS-friendly — accent collapses to ink so nothing is colored.
@@ -98,6 +110,7 @@ const THEMES: Record<TemplateId, Theme> = {
     headerStyle: "underline",
     sectionTitleColor: "#141413",
     uppercaseSections: true,
+    layout: "single",
   },
   modern: {
     accent: "#3E4C59",
@@ -110,22 +123,36 @@ const THEMES: Record<TemplateId, Theme> = {
     headerStyle: "filled",
     sectionTitleColor: "#FFFFFF",
     uppercaseSections: true,
+    layout: "single",
+  },
+  twocol: {
+    accent: "#C96442",
+    ink: "#141413",
+    body: "#3D3D3A",
+    muted: "#5E5D59",
+    faint: "#87867F",
+    separator: "#C0BFB8",
+    nameFont: "NotoSerifSC",
+    headerStyle: "bar",
+    sectionTitleColor: "#141413",
+    uppercaseSections: false,
+    layout: "twocol",
   },
 };
 
 function makeStyles(t: Theme) {
   return StyleSheet.create({
     page: {
-      paddingTop: 48,
-      paddingBottom: 48,
-      paddingHorizontal: 56,
+      paddingTop: 44,
+      paddingBottom: 44,
+      paddingHorizontal: t.layout === "twocol" ? 42 : 56,
       fontFamily: "NotoSansSC",
       fontSize: 10.5,
       color: t.body,
       lineHeight: 1.5,
       display: "flex",
       flexDirection: "column",
-      gap: 18,
+      gap: 16,
     },
 
     headerBlock: { display: "flex", flexDirection: "column", gap: 4 },
@@ -252,6 +279,33 @@ function makeStyles(t: Theme) {
       lineHeight: 1.4,
     },
     itemMeta: { fontSize: 10, color: t.muted, lineHeight: 1.5 },
+
+    // Two-column layout
+    body2col: { display: "flex", flexDirection: "row", gap: 20 },
+    sidebar: {
+      width: 158,
+      display: "flex",
+      flexDirection: "column",
+      gap: 15,
+    },
+    mainCol: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: 15,
+    },
+    contactCol: { display: "flex", flexDirection: "column", gap: 2.5 },
+    contactColItem: { fontSize: 9.5, color: t.muted, lineHeight: 1.45 },
+
+    // Stacked list rows (used inside the narrow sidebar)
+    stackRow: { marginBottom: 7 },
+    stackLabel: {
+      fontSize: 9.5,
+      color: t.faint,
+      letterSpacing: 0.4,
+      lineHeight: 1.4,
+      marginBottom: 1,
+    },
   });
 }
 
@@ -392,11 +446,13 @@ function SkillsSection({
   locale,
   s,
   headerStyle,
+  stacked,
 }: {
   skills: SkillGroup[];
   locale: PdfLocale;
   s: Styles;
   headerStyle: HeaderStyle;
+  stacked?: boolean;
 }) {
   const labels = sectionLabels[locale];
   const useful = skills.filter(
@@ -406,16 +462,21 @@ function SkillsSection({
   return (
     <View>
       <SectionHeader label={labels.skills} s={s} headerStyle={headerStyle} />
-      {useful.map((g) => (
-        <View key={g.id} style={s.twoColRow}>
-          <Text style={s.colLabel}>
-            {g.category || labels.fallbackCategory}
-          </Text>
-          <Text style={[s.colBodyText, { flex: 1 }]}>
-            {g.items.filter((i) => i.trim()).join("  ·  ")}
-          </Text>
-        </View>
-      ))}
+      {useful.map((g) => {
+        const items = g.items.filter((i) => i.trim()).join("  ·  ");
+        const category = g.category || labels.fallbackCategory;
+        return stacked ? (
+          <View key={g.id} style={s.stackRow}>
+            <Text style={s.stackLabel}>{category}</Text>
+            <Text style={s.colBodyText}>{items}</Text>
+          </View>
+        ) : (
+          <View key={g.id} style={s.twoColRow}>
+            <Text style={s.colLabel}>{category}</Text>
+            <Text style={[s.colBodyText, { flex: 1 }]}>{items}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -425,11 +486,13 @@ function AwardsSection({
   locale,
   s,
   headerStyle,
+  stacked,
 }: {
   awards: Award[];
   locale: PdfLocale;
   s: Styles;
   headerStyle: HeaderStyle;
+  stacked?: boolean;
 }) {
   const labels = sectionLabels[locale];
   const useful = awards.filter((a) => a.title.trim() || a.date.trim());
@@ -437,17 +500,26 @@ function AwardsSection({
   return (
     <View>
       <SectionHeader label={labels.awards} s={s} headerStyle={headerStyle} />
-      {useful.map((a) => (
-        <View key={a.id} style={s.twoColRow} wrap={false}>
-          <Text style={s.colLabel}>{a.date}</Text>
-          <View style={s.colBody}>
+      {useful.map((a) =>
+        stacked ? (
+          <View key={a.id} style={s.stackRow} wrap={false}>
             <Text style={s.itemTitle}>{a.title}</Text>
-            {a.issuer.trim() ? (
-              <Text style={s.itemMeta}>{a.issuer}</Text>
-            ) : null}
+            <Text style={s.itemMeta}>
+              {[a.date, a.issuer].filter((x) => x.trim()).join(" · ")}
+            </Text>
           </View>
-        </View>
-      ))}
+        ) : (
+          <View key={a.id} style={s.twoColRow} wrap={false}>
+            <Text style={s.colLabel}>{a.date}</Text>
+            <View style={s.colBody}>
+              <Text style={s.itemTitle}>{a.title}</Text>
+              {a.issuer.trim() ? (
+                <Text style={s.itemMeta}>{a.issuer}</Text>
+              ) : null}
+            </View>
+          </View>
+        ),
+      )}
     </View>
   );
 }
@@ -457,11 +529,13 @@ function CertificationsSection({
   locale,
   s,
   headerStyle,
+  stacked,
 }: {
   certs: Certification[];
   locale: PdfLocale;
   s: Styles;
   headerStyle: HeaderStyle;
+  stacked?: boolean;
 }) {
   const labels = sectionLabels[locale];
   const useful = certs.filter((x) => x.title.trim() || x.date.trim());
@@ -477,7 +551,14 @@ function CertificationsSection({
         const title = cert.issuer.trim()
           ? `${cert.title} · ${cert.issuer}`
           : cert.title;
-        return (
+        return stacked ? (
+          <View key={cert.id} style={s.stackRow} wrap={false}>
+            <Text style={s.itemTitle}>{title}</Text>
+            {cert.date.trim() ? (
+              <Text style={s.itemMeta}>{cert.date}</Text>
+            ) : null}
+          </View>
+        ) : (
           <View key={cert.id} style={s.twoColRow} wrap={false}>
             <Text style={s.colLabel}>{cert.date}</Text>
             <Text style={[s.itemTitle, { flex: 1 }]}>{title}</Text>
@@ -493,11 +574,13 @@ function LanguagesSection({
   locale,
   s,
   headerStyle,
+  stacked,
 }: {
   languages: Language[];
   locale: PdfLocale;
   s: Styles;
   headerStyle: HeaderStyle;
+  stacked?: boolean;
 }) {
   const labels = sectionLabels[locale];
   const useful = languages.filter((l) => l.name.trim() || l.level.trim());
@@ -505,11 +588,42 @@ function LanguagesSection({
   return (
     <View>
       <SectionHeader label={labels.languages} s={s} headerStyle={headerStyle} />
-      {useful.map((l) => (
-        <View key={l.id} style={s.twoColRow} wrap={false}>
-          <Text style={s.colLabel}>{l.name}</Text>
-          <Text style={[s.colBodyText, { flex: 1 }]}>{l.level}</Text>
-        </View>
+      {useful.map((l) =>
+        stacked ? (
+          <View key={l.id} style={s.stackRow} wrap={false}>
+            <Text style={s.itemTitle}>{l.name}</Text>
+            {l.level.trim() ? (
+              <Text style={s.itemMeta}>{l.level}</Text>
+            ) : null}
+          </View>
+        ) : (
+          <View key={l.id} style={s.twoColRow} wrap={false}>
+            <Text style={s.colLabel}>{l.name}</Text>
+            <Text style={[s.colBodyText, { flex: 1 }]}>{l.level}</Text>
+          </View>
+        ),
+      )}
+    </View>
+  );
+}
+
+function ContactColumn({ content, s }: { content: ResumeContent; s: Styles }) {
+  const b = content.basicInfo;
+  const parts = [
+    b.location,
+    b.phone,
+    b.email,
+    shortUrl(b.portfolioUrl),
+    shortUrl(b.github),
+    shortUrl(b.linkedin),
+  ].filter((p) => p.trim());
+  if (parts.length === 0) return null;
+  return (
+    <View style={s.contactCol}>
+      {parts.map((part, i) => (
+        <Text key={i} style={s.contactColItem}>
+          {part}
+        </Text>
       ))}
     </View>
   );
@@ -556,80 +670,118 @@ export function ResumeDocument({
     ["project", "education", "internship"] as ExperienceKind[]
   ).filter((k) => groups[k].length > 0);
 
-  const blocks: Record<SectionKey, ReactNode> = {
-    summary: summary.trim() ? (
-      <Text style={s.summary}>{summary}</Text>
-    ) : null,
-    experience:
-      nonEmptyKinds.length > 0 ? (
-        <View>
-          {nonEmptyKinds.map((kind) => (
-            <ExperienceSection
-              key={kind}
-              kind={kind}
-              items={groups[kind]}
-              locale={locale}
-              s={s}
-              headerStyle={headerStyle}
-            />
-          ))}
-        </View>
-      ) : null,
-    skills: (
-      <SkillsSection
-        skills={skills}
-        locale={locale}
-        s={s}
-        headerStyle={headerStyle}
-      />
-    ),
-    awards: (
-      <AwardsSection
-        awards={awards}
-        locale={locale}
-        s={s}
-        headerStyle={headerStyle}
-      />
-    ),
-    certifications: (
-      <CertificationsSection
-        certs={certifications}
-        locale={locale}
-        s={s}
-        headerStyle={headerStyle}
-      />
-    ),
-    languages: (
-      <LanguagesSection
-        languages={languages}
-        locale={locale}
-        s={s}
-        headerStyle={headerStyle}
-      />
-    ),
+  const renderBlock = (key: SectionKey, stacked: boolean): ReactNode => {
+    switch (key) {
+      case "summary":
+        return summary.trim() ? (
+          <Text style={s.summary}>{summary}</Text>
+        ) : null;
+      case "experience":
+        return nonEmptyKinds.length > 0 ? (
+          <View>
+            {nonEmptyKinds.map((kind) => (
+              <ExperienceSection
+                key={kind}
+                kind={kind}
+                items={groups[kind]}
+                locale={locale}
+                s={s}
+                headerStyle={headerStyle}
+              />
+            ))}
+          </View>
+        ) : null;
+      case "skills":
+        return (
+          <SkillsSection
+            skills={skills}
+            locale={locale}
+            s={s}
+            headerStyle={headerStyle}
+            stacked={stacked}
+          />
+        );
+      case "awards":
+        return (
+          <AwardsSection
+            awards={awards}
+            locale={locale}
+            s={s}
+            headerStyle={headerStyle}
+            stacked={stacked}
+          />
+        );
+      case "certifications":
+        return (
+          <CertificationsSection
+            certs={certifications}
+            locale={locale}
+            s={s}
+            headerStyle={headerStyle}
+            stacked={stacked}
+          />
+        );
+      case "languages":
+        return (
+          <LanguagesSection
+            languages={languages}
+            locale={locale}
+            s={s}
+            headerStyle={headerStyle}
+            stacked={stacked}
+          />
+        );
+    }
   };
+
+  const header = (
+    <View style={s.headerBlock}>
+      {targetRole.trim() ? (
+        <Text style={s.overline}>
+          {labels.targetRolePrefix} · {targetRole}
+        </Text>
+      ) : null}
+      <Text style={s.name}>{displayName}</Text>
+      {basicInfo.headline.trim() ? (
+        <Text style={s.headline}>{basicInfo.headline}</Text>
+      ) : null}
+    </View>
+  );
+
+  if (theme.layout === "twocol") {
+    const sidebarKeys = order.filter((k) => SIDEBAR_SECTIONS.has(k));
+    const mainKeys = order.filter((k) => !SIDEBAR_SECTIONS.has(k));
+    return (
+      <Document>
+        <Page size="A4" style={s.page}>
+          {header}
+          <View style={s.rule} />
+          <View style={s.body2col}>
+            <View style={s.sidebar}>
+              <ContactColumn content={content} s={s} />
+              {sidebarKeys.map((key) => (
+                <Fragment key={key}>{renderBlock(key, true)}</Fragment>
+              ))}
+            </View>
+            <View style={s.mainCol}>
+              {mainKeys.map((key) => (
+                <Fragment key={key}>{renderBlock(key, false)}</Fragment>
+              ))}
+            </View>
+          </View>
+        </Page>
+      </Document>
+    );
+  }
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        <View style={s.headerBlock}>
-          {targetRole.trim() ? (
-            <Text style={s.overline}>
-              {labels.targetRolePrefix} · {targetRole}
-            </Text>
-          ) : null}
-          <Text style={s.name}>{displayName}</Text>
-          {basicInfo.headline.trim() ? (
-            <Text style={s.headline}>{basicInfo.headline}</Text>
-          ) : null}
-        </View>
-
+        {header}
         <ContactRow content={content} s={s} />
-
         <View style={s.rule} />
-
         {order.map((key) => (
-          <Fragment key={key}>{blocks[key]}</Fragment>
+          <Fragment key={key}>{renderBlock(key, false)}</Fragment>
         ))}
       </Page>
     </Document>
