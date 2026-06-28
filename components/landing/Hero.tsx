@@ -1,29 +1,27 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-export function Hero() {
+export async function Hero() {
+  const t = await getTranslations("landing");
   return (
     <section className="flex flex-col md:flex-row gap-12 md:gap-18 px-6 md:px-14 py-16 md:py-24 items-center bg-parchment">
       <div className="flex flex-col gap-6 md:gap-8 flex-1 w-full">
-        <span className="overline">写给刚进入职场的你</span>
+        <span className="overline">{t("hero.overline")}</span>
 
         <h1 className="font-serif text-[36px] md:text-[64px] leading-[1.15] text-near-black tracking-tight">
-          一份像样的简历，
-          <br />
-          从说清楚你做过什么
-          <br />
-          开始。
+          {t.rich("hero.title", { br: () => <br /> })}
         </h1>
 
         <p className="max-w-[580px] text-base md:text-lg leading-[1.7] text-olive-gray">
-          我们不是简历模板工具，也不是花哨的 AI 写手。
-          <span className="hidden md:inline">
-            <br />
-          </span>{" "}
-          我们帮你把课程项目、毕业设计、校园经历里的那些「真正做过的事」，
-          <span className="hidden md:inline">
-            <br />
-          </span>{" "}
-          用职业语言说清楚——让别人愿意约你聊一聊。
+          {t.rich("hero.description", {
+            br: () => (
+              <>
+                <span className="hidden md:inline">
+                  <br />
+                </span>{" "}
+              </>
+            ),
+          })}
         </p>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2">
@@ -31,23 +29,23 @@ export function Hero() {
             href="/dashboard"
             className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-terracotta text-ivory font-medium"
           >
-            开始写我的第一份简历
+            {t("hero.ctaPrimary")}
             <span>→</span>
           </Link>
           <Link
             href="/upload"
             className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white text-near-black font-medium ring-1 ring-border-warm"
           >
-            我已经有一份，帮我改一改
+            {t("hero.ctaSecondary")}
           </Link>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-4 text-[13px] text-stone-gray">
-          <span>免费开始</span>
+          <span>{t("hero.badgeFree")}</span>
           <span className="hidden sm:inline">·</span>
-          <span>10 分钟完成首版</span>
+          <span>{t("hero.badgeTime")}</span>
           <span className="hidden sm:inline">·</span>
-          <span>无需信用卡</span>
+          <span>{t("hero.badgeNoCard")}</span>
         </div>
       </div>
 
@@ -58,7 +56,8 @@ export function Hero() {
   );
 }
 
-function HeroArt() {
+async function HeroArt() {
+  const t = await getTranslations("landing");
   return (
     <div className="relative w-[520px] h-[620px] rounded-3xl bg-ivory overflow-hidden shrink-0">
       {/* background blobs */}
@@ -85,18 +84,20 @@ function HeroArt() {
           boxShadow: "0px 8px 32px rgba(0,0,0,0.08)",
         }}
       >
-        <div className="font-serif text-[22px] text-near-black">李思远</div>
-        <div className="text-xs text-stone-gray">应届本科 · 前端开发</div>
+        <div className="font-serif text-[22px] text-near-black">
+          {t("hero.art.name")}
+        </div>
+        <div className="text-xs text-stone-gray">{t("hero.art.role")}</div>
         <div className="h-px bg-border-warm" />
         <div className="pt-1.5 flex flex-col gap-1.5">
           <div className="text-[11px] font-medium text-terracotta tracking-widest">
-            项目经历
+            {t("hero.art.projectLabel")}
           </div>
           <div className="font-serif text-sm text-near-black">
-            校园二手交易平台
+            {t("hero.art.projectName")}
           </div>
           <p className="text-[11px] leading-[1.6] text-olive-gray">
-            独立设计并实现商品发布、搜索与聊天模块，支撑校内日活 800+ 用户。
+            {t("hero.art.projectBody")}
           </p>
         </div>
         <div className="h-0.5 rounded-sm bg-border-cream" />
@@ -104,7 +105,7 @@ function HeroArt() {
         <div className="h-0.5 rounded-sm bg-border-cream w-48" />
         <div className="pt-3 flex flex-col gap-1.5">
           <div className="text-[11px] font-medium text-terracotta tracking-widest">
-            技能栈
+            {t("hero.art.skillsLabel")}
           </div>
           <div className="flex gap-1.5">
             <span className="px-2.5 py-0.5 rounded-full bg-parchment text-[10px] text-charcoal-warm font-mono">
@@ -132,8 +133,10 @@ function HeroArt() {
           } as React.CSSProperties
         }
       >
-        <div className="text-xs font-medium text-ivory">AI 帮你改写</div>
-        <div className="text-[10px] text-ivory/80">去学生气 · 动作词 · 成果</div>
+        <div className="text-xs font-medium text-ivory">
+          {t("hero.art.noteTitle")}
+        </div>
+        <div className="text-[10px] text-ivory/80">{t("hero.art.noteSub")}</div>
       </div>
 
       {/* decor dot */}

@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cloneResume, removeResume } from "@/app/actions/resumes";
 
 export type ResumeListItem = {
@@ -17,11 +18,7 @@ export type ResumeListItem = {
 
 type SortKey = "updated" | "created" | "name";
 
-const SORT_LABELS: Record<SortKey, string> = {
-  updated: "最近修改",
-  created: "最近创建",
-  name: "按名称",
-};
+const SORT_KEYS: SortKey[] = ["updated", "created", "name"];
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -33,6 +30,7 @@ function formatDate(iso: string) {
 }
 
 export function ResumeList({ items }: { items: ResumeListItem[] }) {
+  const t = useTranslations("dashboard");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("updated");
 
@@ -60,17 +58,17 @@ export function ResumeList({ items }: { items: ResumeListItem[] }) {
       <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 mb-4">
         <div className="relative flex-1 min-w-0">
           <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-gray text-[13px]">
-            搜
+            {t("search.icon")}
           </span>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索名称、定位或目标岗位"
+            placeholder={t("search.placeholder")}
             className="w-full rounded-xl bg-ivory ring-1 ring-border-warm pl-9 pr-3 py-2 text-[13.5px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
           />
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => (
+          {SORT_KEYS.map((key) => (
             <button
               key={key}
               type="button"
@@ -82,7 +80,7 @@ export function ResumeList({ items }: { items: ResumeListItem[] }) {
                   : "text-stone-gray hover:text-charcoal-warm")
               }
             >
-              {SORT_LABELS[key]}
+              {t(`sort.${key}`)}
             </button>
           ))}
         </div>
@@ -91,7 +89,7 @@ export function ResumeList({ items }: { items: ResumeListItem[] }) {
       {visible.length === 0 ? (
         <div className="rounded-2xl bg-ivory/60 ring-1 ring-dashed ring-border-warm px-6 py-10 text-center">
           <p className="text-[13.5px] text-stone-gray">
-            没有匹配「{query.trim()}」的简历。
+            {t("search.noMatch", { query: query.trim() })}
           </p>
         </div>
       ) : (
@@ -106,6 +104,7 @@ export function ResumeList({ items }: { items: ResumeListItem[] }) {
 }
 
 function ResumeRow({ item }: { item: ResumeListItem }) {
+  const t = useTranslations("dashboard");
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [isDeleting, startDelete] = useTransition();
@@ -147,7 +146,7 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
           {item.targetRole ? (
             <span
               className="shrink-0 inline-flex items-center rounded-full ring-1 ring-border-warm bg-parchment px-2 py-0.5 text-[11px] text-charcoal-warm"
-              title="目标岗位"
+              title={t("row.targetRoleTitle")}
             >
               → {item.targetRole}
             </span>
@@ -164,7 +163,7 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
               disabled={isDeleting}
               className="rounded-lg bg-error text-ivory px-3 py-1.5 text-[12px] hover:opacity-90 transition"
             >
-              {isDeleting ? "删除中…" : "确认删除"}
+              {isDeleting ? t("row.deleting") : t("row.confirmDelete")}
             </button>
             <button
               type="button"
@@ -172,7 +171,7 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
               disabled={isDeleting}
               className="rounded-lg px-2.5 py-1.5 text-[12px] text-stone-gray hover:text-charcoal-warm transition"
             >
-              取消
+              {t("row.cancel")}
             </button>
           </>
         ) : (
@@ -181,15 +180,15 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
               <button
                 type="submit"
                 className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12px] text-charcoal-warm hover:bg-border-cream transition"
-                title="克隆成新版本"
+                title={t("row.cloneTitle")}
               >
-                克隆
+                {t("row.clone")}
               </button>
             </form>
             <a
               href={`/api/resumes/${item.id}/pdf`}
               className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12px] text-charcoal-warm hover:bg-border-cream transition"
-              title="导出 PDF"
+              title={t("row.pdfTitle")}
             >
               PDF
             </a>
@@ -197,9 +196,9 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
               type="button"
               onClick={() => setConfirming(true)}
               className="rounded-lg px-2.5 py-1.5 text-[12px] text-stone-gray hover:bg-error/10 hover:text-error transition"
-              title="删除"
+              title={t("row.deleteTitle")}
             >
-              删除
+              {t("row.delete")}
             </button>
           </>
         )}
@@ -209,6 +208,7 @@ function ResumeRow({ item }: { item: ResumeListItem }) {
 }
 
 function CheckupBadge({ score }: { score: number }) {
+  const t = useTranslations("dashboard");
   const tone =
     score >= 80
       ? "text-terracotta bg-terracotta/10 ring-terracotta/20"
@@ -218,9 +218,9 @@ function CheckupBadge({ score }: { score: number }) {
   return (
     <span
       className={`shrink-0 inline-flex items-center gap-1 rounded-full ring-1 px-2 py-0.5 text-[11px] ${tone}`}
-      title="上次体检分数"
+      title={t("badge.checkupTitle")}
     >
-      <span className="opacity-70">体检</span>
+      <span className="opacity-70">{t("badge.checkup")}</span>
       <span className="font-medium tabular-nums">{score}</span>
     </span>
   );

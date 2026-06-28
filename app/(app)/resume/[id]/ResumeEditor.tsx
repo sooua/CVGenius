@@ -20,6 +20,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   cloneResume,
   deleteResume,
@@ -36,7 +37,6 @@ import {
   type TemplateId,
 } from "@/lib/resume/templates";
 import {
-  SECTION_LABELS,
   type SectionKey,
 } from "@/lib/resume/sections";
 import {
@@ -163,6 +163,7 @@ export function ResumeEditor({
   initialTemplate: TemplateId;
   initialSectionOrder: SectionKey[];
 }) {
+  const t = useTranslations("editor");
   const router = useRouter();
   const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
   const [isDeleting, startDelete] = useTransition();
@@ -303,7 +304,7 @@ export function ResumeEditor({
   }, [saveNow]);
 
   const onDelete = () => {
-    if (!confirm("确认删除这份简历吗？无法恢复。")) return;
+    if (!confirm(t("confirm.delete"))) return;
     startDelete(async () => {
       await deleteResume(resumeId);
       router.push("/dashboard");
@@ -452,7 +453,10 @@ export function ResumeEditor({
       setPanelOpen(true);
       setCheckup({
         kind: "error",
-        message: `本月 AI 体检已用完（${quota.checkupUsed} / ${quota.checkupLimit}）。下月 1 号重置。`,
+        message: t("checkup.quotaExceeded", {
+          used: quota.checkupUsed,
+          limit: quota.checkupLimit,
+        }),
       });
       return;
     }
@@ -472,9 +476,9 @@ export function ResumeEditor({
     <form onSubmit={(e) => e.preventDefault()} className="space-y-8 pb-20">
       <header className="sticky top-0 z-10 -mx-4 md:-mx-8 px-4 md:px-8 py-3 md:py-4 bg-parchment/90 backdrop-blur-sm border-b border-border-warm flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="overline mb-1 md:mb-1.5">编辑 · 简历</p>
+          <p className="overline mb-1 md:mb-1.5">{t("header.overline")}</p>
           <h1 className="font-serif text-[18px] md:text-[22px] leading-tight text-near-black">
-            写下你的经历
+            {t("header.title")}
           </h1>
         </div>
         <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-end">
@@ -485,7 +489,10 @@ export function ResumeEditor({
             disabled={checkup.kind === "running"}
             title={
               !canCheckup && checkup.kind !== "result"
-                ? `本月体检已用完（${quota.checkupUsed} / ${quota.checkupLimit}）`
+                ? t("checkup.quotaTitle", {
+                    used: quota.checkupUsed,
+                    limit: quota.checkupLimit,
+                  })
                 : undefined
             }
             className={
@@ -496,12 +503,12 @@ export function ResumeEditor({
             }
           >
             {checkup.kind === "running"
-              ? "体检中…"
+              ? t("checkup.running")
               : checkup.kind === "result"
-                ? `体检 · ${checkup.data.overallScore} 分`
+                ? t("checkup.score", { score: checkup.data.overallScore })
                 : !canCheckup
-                  ? "本月已满"
-                  : "体检"}
+                  ? t("checkup.full")
+                  : t("checkup.label")}
           </button>
           {canMatch ? (
             <button
@@ -511,23 +518,23 @@ export function ResumeEditor({
               title={
                 quota.unlimited
                   ? undefined
-                  : `免费试用 · 本月还剩 ${matchRemaining} 次`
+                  : t("trialTitle", { remaining: matchRemaining })
               }
               className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
             >
               {match.kind === "running"
-                ? "匹配中…"
+                ? t("match.running")
                 : quota.unlimited
-                  ? "匹配 JD"
-                  : `匹配 JD · 剩 ${matchRemaining}`}
+                  ? t("match.label")
+                  : t("match.labelRemaining", { remaining: matchRemaining })}
             </button>
           ) : (
             <Link
               href="/billing/start"
-              title="免费额度已用完 · 点击升级 Pro 不限次"
+              title={t("upgradeTitle")}
               className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
             >
-              匹配 JD · Pro
+              {t("match.pro")}
             </Link>
           )}
           {canCover ? (
@@ -538,23 +545,23 @@ export function ResumeEditor({
               title={
                 quota.unlimited
                   ? undefined
-                  : `免费试用 · 本月还剩 ${coverRemaining} 次`
+                  : t("trialTitle", { remaining: coverRemaining })
               }
               className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
             >
               {cover.kind === "running"
-                ? "写信中…"
+                ? t("cover.running")
                 : quota.unlimited
-                  ? "求职信"
-                  : `求职信 · 剩 ${coverRemaining}`}
+                  ? t("cover.label")
+                  : t("cover.labelRemaining", { remaining: coverRemaining })}
             </button>
           ) : (
             <Link
               href="/billing/start"
-              title="免费额度已用完 · 点击升级 Pro 不限次"
+              title={t("upgradeTitle")}
               className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
             >
-              求职信 · Pro
+              {t("cover.pro")}
             </Link>
           )}
           {canInterview ? (
@@ -565,23 +572,25 @@ export function ResumeEditor({
               title={
                 quota.unlimited
                   ? undefined
-                  : `免费试用 · 本月还剩 ${interviewRemaining} 次`
+                  : t("trialTitle", { remaining: interviewRemaining })
               }
               className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream disabled:opacity-60 disabled:cursor-wait transition"
             >
               {interview.kind === "running"
-                ? "预测中…"
+                ? t("interview.running")
                 : quota.unlimited
-                  ? "面试题"
-                  : `面试题 · 剩 ${interviewRemaining}`}
+                  ? t("interview.label")
+                  : t("interview.labelRemaining", {
+                      remaining: interviewRemaining,
+                    })}
             </button>
           ) : (
             <Link
               href="/billing/start"
-              title="免费额度已用完 · 点击升级 Pro 不限次"
+              title={t("upgradeTitle")}
               className="rounded-lg bg-warm-sand/60 px-3 py-1.5 text-[13px] text-stone-gray hover:bg-warm-sand hover:text-charcoal-warm transition"
             >
-              面试题 · Pro
+              {t("interview.pro")}
             </Link>
           )}
           <ExportDropdown resumeId={resumeId} canEnglish={canMatch} />
@@ -590,7 +599,7 @@ export function ResumeEditor({
 
       <FirstRunGuide />
 
-      <Section title="目标岗位">
+      <Section title={t("targetRole.heading")}>
         <TargetRolePicker
           value={watch("targetRole") ?? ""}
           onChange={(v) =>
@@ -601,28 +610,27 @@ export function ResumeEditor({
           }
         />
         <p className="mt-2 text-[12px] text-stone-gray leading-relaxed">
-          点下面的标签直接填入，或者在输入框里写得更具体（例如「前端工程师 · React 方向」）。
-          留空会按「通用」方向写。
+          {t("targetRole.hint")}
         </p>
       </Section>
 
-      <Section title="基本信息">
+      <Section title={t("basic.heading")}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="姓名">
+          <Field label={t("basic.name")}>
             <input
               {...register("basicInfo.name")}
-              placeholder="你的名字"
+              placeholder={t("basic.namePlaceholder")}
               className={inputClass}
             />
           </Field>
-          <Field label="职业定位（一句话）">
+          <Field label={t("basic.headline")}>
             <input
               {...register("basicInfo.headline")}
-              placeholder="前端工程师 / 产品经理实习生 ..."
+              placeholder={t("basic.headlinePlaceholder")}
               className={inputClass}
             />
           </Field>
-          <Field label="邮箱">
+          <Field label={t("basic.email")}>
             <input
               {...register("basicInfo.email")}
               type="email"
@@ -630,21 +638,21 @@ export function ResumeEditor({
               className={inputClass}
             />
           </Field>
-          <Field label="手机">
+          <Field label={t("basic.phone")}>
             <input
               {...register("basicInfo.phone")}
               placeholder="+86 ..."
               className={inputClass}
             />
           </Field>
-          <Field label="所在地">
+          <Field label={t("basic.location")}>
             <input
               {...register("basicInfo.location")}
-              placeholder="城市"
+              placeholder={t("basic.locationPlaceholder")}
               className={inputClass}
             />
           </Field>
-          <Field label="作品集 / 主页">
+          <Field label={t("basic.portfolio")}>
             <input
               {...register("basicInfo.portfolioUrl")}
               placeholder="https://"
@@ -654,31 +662,31 @@ export function ResumeEditor({
           <Field label="GitHub">
             <input
               {...register("basicInfo.github")}
-              placeholder="https://github.com/你的用户名"
+              placeholder={t("basic.githubPlaceholder")}
               className={inputClass}
             />
           </Field>
           <Field label="LinkedIn">
             <input
               {...register("basicInfo.linkedin")}
-              placeholder="https://linkedin.com/in/你的用户名"
+              placeholder={t("basic.linkedinPlaceholder")}
               className={inputClass}
             />
           </Field>
         </div>
       </Section>
 
-      <Section title="个人简介">
+      <Section title={t("summary.heading")}>
         <textarea
           {...register("summary")}
           rows={4}
-          placeholder="两三句话写下你是谁、想找什么工作。"
+          placeholder={t("summary.placeholder")}
           className={`${inputClass} resize-y leading-relaxed`}
         />
       </Section>
 
       <Section
-        title="经历"
+        title={t("experience.heading")}
         actions={
           <div className="flex gap-2">
             {experienceKinds.map((kind) => (
@@ -707,20 +715,20 @@ export function ResumeEditor({
                 }}
                 className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
               >
-                + {experienceKindLabels[kind]}
+                + {t(`expKind.${kind}`)}
               </button>
             ))}
           </div>
         }
       >
         {experiencesField.fields.length === 0 ? (
-          <EmptyRow text="还没有添加经历。从上面的按钮开始——教育、项目、实习都可以。" />
+          <EmptyRow text={t("experience.empty")} />
         ) : (
           <ul className="space-y-3">
             {experiencesField.fields.map((field, index) => {
               const isCollapsed = collapsed.has(field.id);
               const live = watch(`experiences.${index}`);
-              const title = live?.title || "（未命名）";
+              const title = live?.title || t("experience.untitledItem");
               const meta = [live?.org, live?.role, dateRange(live?.startDate, live?.endDate)]
                 .filter(Boolean)
                 .join(" · ");
@@ -737,7 +745,7 @@ export function ResumeEditor({
                       className="flex-1 flex items-center gap-3 text-left min-w-0"
                     >
                       <span className="text-[12.5px] text-terracotta tracking-wide shrink-0 w-16">
-                        {experienceKindLabels[field.kind as ExperienceKind]}
+                        {t(`expKind.${field.kind as ExperienceKind}`)}
                       </span>
                       <span className="font-serif text-[15px] text-near-black truncate">
                         {title}
@@ -748,27 +756,27 @@ export function ResumeEditor({
                     </button>
                     <div className="flex items-center gap-1 shrink-0 text-stone-gray">
                       <IconButton
-                        title="上移"
+                        title={t("move.up")}
                         disabled={index === 0}
                         onClick={() => experiencesField.move(index, index - 1)}
                       >
                         ↑
                       </IconButton>
                       <IconButton
-                        title="下移"
+                        title={t("move.down")}
                         disabled={index === experiencesField.fields.length - 1}
                         onClick={() => experiencesField.move(index, index + 1)}
                       >
                         ↓
                       </IconButton>
                       <IconButton
-                        title={isCollapsed ? "展开" : "收起"}
+                        title={isCollapsed ? t("expand") : t("collapse")}
                         onClick={() => toggleCollapse(field.id)}
                       >
                         {isCollapsed ? "＋" : "−"}
                       </IconButton>
                       <IconButton
-                        title="删除"
+                        title={t("delete")}
                         onClick={() => experiencesField.remove(index)}
                         danger
                       >
@@ -780,43 +788,43 @@ export function ResumeEditor({
                   {!isCollapsed && (
                     <div className="border-t border-border-warm px-5 py-5 space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Field label="标题">
+                        <Field label={t("experience.field.title")}>
                           <input
                             {...register(`experiences.${index}.title`)}
-                            placeholder="项目 / 学校 / 公司名称"
+                            placeholder={t("experience.field.titlePlaceholder")}
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="组织 / 机构">
+                        <Field label={t("experience.field.org")}>
                           <input
                             {...register(`experiences.${index}.org`)}
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="角色">
+                        <Field label={t("experience.field.role")}>
                           <input
                             {...register(`experiences.${index}.role`)}
-                            placeholder="主导 / 负责 / 成员 ..."
+                            placeholder={t("experience.field.rolePlaceholder")}
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="地点">
+                        <Field label={t("experience.field.location")}>
                           <input
                             {...register(`experiences.${index}.location`)}
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="开始">
+                        <Field label={t("experience.field.start")}>
                           <input
                             {...register(`experiences.${index}.startDate`)}
                             placeholder="2024.09"
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="结束">
+                        <Field label={t("experience.field.end")}>
                           <input
                             {...register(`experiences.${index}.endDate`)}
-                            placeholder="至今 / 2025.06"
+                            placeholder={t("experience.field.endPlaceholder")}
                             className={inputClass}
                           />
                         </Field>
@@ -841,7 +849,7 @@ export function ResumeEditor({
       </Section>
 
       <Section
-        title="技能"
+        title={t("skills.heading")}
         actions={
           <button
             type="button"
@@ -850,12 +858,12 @@ export function ResumeEditor({
             }
             className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
           >
-            + 新增类别
+            {t("skills.addCategory")}
           </button>
         }
       >
         {skillsField.fields.length === 0 ? (
-          <EmptyRow text="例如：编程语言、框架、工具。每类一行。" />
+          <EmptyRow text={t("skills.empty")} />
         ) : (
           <ul className="space-y-3">
             {skillsField.fields.map((field, index) => (
@@ -865,7 +873,7 @@ export function ResumeEditor({
               >
                 <input
                   {...register(`skills.${index}.category`)}
-                  placeholder="类别"
+                  placeholder={t("skills.categoryPlaceholder")}
                   className={`${inputClass} w-40`}
                 />
                 <SkillItemsEditor
@@ -878,7 +886,7 @@ export function ResumeEditor({
                   onClick={() => skillsField.remove(index)}
                   className="text-[12px] text-stone-gray hover:text-error transition shrink-0"
                 >
-                  删除
+                  {t("delete")}
                 </button>
               </li>
             ))}
@@ -887,7 +895,7 @@ export function ResumeEditor({
       </Section>
 
       <Section
-        title="获奖荣誉"
+        title={t("awards.heading")}
         actions={
           <button
             type="button"
@@ -901,12 +909,12 @@ export function ResumeEditor({
             }
             className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
           >
-            + 新增一条
+            {t("addItem")}
           </button>
         }
       >
         {awardsField.fields.length === 0 ? (
-          <EmptyRow text="奖学金、比赛名次、荣誉称号——写上时间、标题和颁发机构。" />
+          <EmptyRow text={t("awards.empty")} />
         ) : (
           <ul className="space-y-2">
             {awardsField.fields.map((field, index) => (
@@ -921,12 +929,12 @@ export function ResumeEditor({
                 />
                 <input
                   {...register(`awards.${index}.title`)}
-                  placeholder="标题（如 XCTF 全国第 5 名）"
+                  placeholder={t("awards.titlePlaceholder")}
                   className={`${inputClass} flex-1`}
                 />
                 <input
                   {...register(`awards.${index}.issuer`)}
-                  placeholder="颁发机构"
+                  placeholder={t("awards.issuerPlaceholder")}
                   className={`${inputClass} w-44`}
                 />
                 <button
@@ -934,7 +942,7 @@ export function ResumeEditor({
                   onClick={() => awardsField.remove(index)}
                   className="text-[12px] text-stone-gray hover:text-error transition shrink-0"
                 >
-                  删除
+                  {t("delete")}
                 </button>
               </li>
             ))}
@@ -943,7 +951,7 @@ export function ResumeEditor({
       </Section>
 
       <Section
-        title="证书"
+        title={t("certs.heading")}
         actions={
           <button
             type="button"
@@ -957,12 +965,12 @@ export function ResumeEditor({
             }
             className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
           >
-            + 新增一条
+            {t("addItem")}
           </button>
         }
       >
         {certificationsField.fields.length === 0 ? (
-          <EmptyRow text="CET-6、AWS、CKA 等——时间、名称、颁发机构（可选）。" />
+          <EmptyRow text={t("certs.empty")} />
         ) : (
           <ul className="space-y-2">
             {certificationsField.fields.map((field, index) => (
@@ -977,12 +985,12 @@ export function ResumeEditor({
                 />
                 <input
                   {...register(`certifications.${index}.title`)}
-                  placeholder="证书名称（如 OSCP）"
+                  placeholder={t("certs.titlePlaceholder")}
                   className={`${inputClass} flex-1`}
                 />
                 <input
                   {...register(`certifications.${index}.issuer`)}
-                  placeholder="颁发机构（可留空）"
+                  placeholder={t("certs.issuerPlaceholder")}
                   className={`${inputClass} w-44`}
                 />
                 <button
@@ -990,7 +998,7 @@ export function ResumeEditor({
                   onClick={() => certificationsField.remove(index)}
                   className="text-[12px] text-stone-gray hover:text-error transition shrink-0"
                 >
-                  删除
+                  {t("delete")}
                 </button>
               </li>
             ))}
@@ -999,7 +1007,7 @@ export function ResumeEditor({
       </Section>
 
       <Section
-        title="语言能力"
+        title={t("languages.heading")}
         actions={
           <button
             type="button"
@@ -1008,12 +1016,12 @@ export function ResumeEditor({
             }
             className="rounded-lg bg-warm-sand px-3 py-1.5 text-[12.5px] text-charcoal-warm hover:bg-border-cream transition"
           >
-            + 新增一条
+            {t("addItem")}
           </button>
         }
       >
         {languagesField.fields.length === 0 ? (
-          <EmptyRow text="例如：英语 · CET-6 / 雅思 7.0；日语 · N2。语言 + 水平各一行。" />
+          <EmptyRow text={t("languages.empty")} />
         ) : (
           <ul className="space-y-2">
             {languagesField.fields.map((field, index) => (
@@ -1023,12 +1031,12 @@ export function ResumeEditor({
               >
                 <input
                   {...register(`languages.${index}.name`)}
-                  placeholder="语言（如 英语）"
+                  placeholder={t("languages.namePlaceholder")}
                   className={`${inputClass} w-40`}
                 />
                 <input
                   {...register(`languages.${index}.level`)}
-                  placeholder="水平（如 CET-6 · 流利读写）"
+                  placeholder={t("languages.levelPlaceholder")}
                   className={`${inputClass} flex-1`}
                 />
                 <button
@@ -1036,7 +1044,7 @@ export function ResumeEditor({
                   onClick={() => languagesField.remove(index)}
                   className="text-[12px] text-stone-gray hover:text-error transition shrink-0"
                 >
-                  删除
+                  {t("delete")}
                 </button>
               </li>
             ))}
@@ -1120,20 +1128,20 @@ export function ResumeEditor({
             disabled={isDeleting}
             className="text-[13px] text-stone-gray hover:text-error disabled:opacity-50 transition"
           >
-            {isDeleting ? "删除中…" : "删除这份简历"}
+            {isDeleting ? t("footer.deleting") : t("footer.delete")}
           </button>
           <button
             type="button"
             onClick={onClone}
             disabled={isCloning}
             className="text-[13px] text-stone-gray hover:text-near-black disabled:opacity-50 transition"
-            title="基于这份内容复制一份，用来针对不同岗位改写"
+            title={t("footer.cloneTitle")}
           >
-            {isCloning ? "克隆中…" : "克隆成新版本"}
+            {isCloning ? t("footer.cloning") : t("footer.clone")}
           </button>
         </div>
         <p className="text-[12px] text-stone-gray">
-          Cmd / Ctrl + S 立即保存
+          {t("footer.saveHint")}
         </p>
       </footer>
     </form>
@@ -1148,6 +1156,7 @@ function dateRange(start?: string, end?: string) {
 const GUIDE_DISMISS_KEY = "firstcv-editor-guide-dismissed";
 
 function FirstRunGuide() {
+  const t = useTranslations("editor");
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -1176,12 +1185,13 @@ function FirstRunGuide() {
   return (
     <div className="motion-slide-in-soft rounded-2xl bg-ivory ring-1 ring-border-warm px-5 py-4 flex items-start gap-4">
       <div className="flex-1 min-w-0">
-        <p className="overline mb-1.5">新手提示</p>
+        <p className="overline mb-1.5">{t("guide.overline")}</p>
         <p className="text-[13px] text-olive-gray leading-relaxed">
-          不知道经历怎么写？在亮点区用大白话写一句，点{" "}
-          <span className="text-terracotta">✨ 生成</span>{" "}
-          让 AI 扩成专业亮点；写完点顶部「体检」看评分、「面试题」提前准备；在下面「外观」里选模板、开「实时预览」边改边看，最后导出
-          PDF。
+          {t.rich("guide.body", {
+            gen: (chunks) => (
+              <span className="text-terracotta">{chunks}</span>
+            ),
+          })}
         </p>
       </div>
       <button
@@ -1189,7 +1199,7 @@ function FirstRunGuide() {
         onClick={dismiss}
         className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12px] hover:bg-border-cream transition"
       >
-        知道了
+        {t("guide.dismiss")}
       </button>
     </div>
   );
@@ -1216,6 +1226,7 @@ function HighlightsEditor({
     outcome: "success" | "quota-exceeded" | "other-error",
   ) => void;
 }) {
+  const t = useTranslations("editor");
   const { fields, append, remove } = useFieldArray({
     control,
     name: `experiences.${nestIndex}.highlights` as never,
@@ -1229,11 +1240,11 @@ function HighlightsEditor({
   const generate = async () => {
     const description = genText.trim();
     if (!description) {
-      setGenState({ kind: "error", message: "先用一句话写下你做了什么" });
+      setGenState({ kind: "error", message: t("highlight.genEmpty") });
       return;
     }
     if (!canRewrite) {
-      setGenState({ kind: "error", message: "本月 AI 额度已用完" });
+      setGenState({ kind: "error", message: t("highlight.quotaExceeded") });
       return;
     }
     const exp = getValues(`experiences.${nestIndex}`);
@@ -1262,18 +1273,18 @@ function HighlightsEditor({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[12.5px] text-olive-gray">亮点 / 产出</span>
+        <span className="text-[12.5px] text-olive-gray">{t("highlight.label")}</span>
         <button
           type="button"
           onClick={() => append("" as never)}
           className="text-[12px] text-terracotta hover:underline"
         >
-          + 新增一条
+          {t("addItem")}
         </button>
       </div>
       {fields.length === 0 ? (
         <p className="text-[12.5px] text-stone-gray">
-          每一条写一句话——用动词开头，尽量带上数字和具体结果。
+          {t("highlight.empty")}
         </p>
       ) : (
         <ul className="space-y-3">
@@ -1305,17 +1316,17 @@ function HighlightsEditor({
             }}
             rows={2}
             disabled={genState.kind === "loading"}
-            placeholder="用大白话写一句你做了什么，AI 帮你扩成 2-3 条专业亮点（例：给社团做了个报名小程序，二十多个活动用过）"
+            placeholder={t("highlight.genPlaceholder")}
             className={`${inputClass} flex-1 resize-y text-[13px]`}
           />
           <button
             type="button"
             onClick={generate}
             disabled={genState.kind === "loading" || !canRewrite}
-            title={canRewrite ? "AI 生成亮点" : "本月 AI 额度已用完"}
+            title={canRewrite ? t("highlight.genTitle") : t("highlight.quotaExceeded")}
             className="mt-0.5 shrink-0 rounded-lg bg-terracotta text-ivory px-3 py-2 text-[12px] hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            {genState.kind === "loading" ? "生成中…" : "生成"}
+            {genState.kind === "loading" ? t("highlight.generating") : t("highlight.generate")}
           </button>
         </div>
         {genState.kind === "error" && (
@@ -1357,6 +1368,7 @@ function HighlightRow({
     outcome: "success" | "quota-exceeded" | "other-error",
   ) => void;
 }) {
+  const t = useTranslations("editor");
   const [rewrite, setRewrite] = useState<RewriteState>({ kind: "idle" });
 
   const fieldPath =
@@ -1365,7 +1377,7 @@ function HighlightRow({
   const triggerRewrite = async () => {
     const current = getValues(fieldPath) ?? "";
     if (!current.trim()) {
-      setRewrite({ kind: "error", message: "先写一句再改写" });
+      setRewrite({ kind: "error", message: t("rewrite.empty") });
       return;
     }
     const experience = getValues(`experiences.${nestIndex}`);
@@ -1377,7 +1389,7 @@ function HighlightRow({
     if (experience.role) context["角色"] = experience.role;
 
     if (!canRewrite) {
-      setRewrite({ kind: "error", message: "本月 AI 改写已用完" });
+      setRewrite({ kind: "error", message: t("rewrite.quotaExceeded") });
       return;
     }
     setRewrite({ kind: "loading" });
@@ -1414,14 +1426,14 @@ function HighlightRow({
           {...register(fieldPath)}
           rows={2}
           className={`${inputClass} flex-1 resize-y`}
-          placeholder="主导了什么 / 做出了什么 / 带来了什么结果"
+          placeholder={t("highlight.rowPlaceholder")}
         />
         <div className="pt-1 flex flex-col gap-1 items-center">
           <button
             type="button"
             onClick={triggerRewrite}
             disabled={rewrite.kind === "loading" || !canRewrite}
-            title={canRewrite ? "AI 改写这一条" : "本月 AI 改写已用完"}
+            title={canRewrite ? t("rewrite.title") : t("rewrite.quotaExceeded")}
             className={
               "text-[11px] disabled:opacity-50 disabled:cursor-not-allowed " +
               (canRewrite
@@ -1430,15 +1442,15 @@ function HighlightRow({
             }
           >
             {rewrite.kind === "loading"
-              ? "改写中…"
+              ? t("rewrite.running")
               : !canRewrite
-                ? "已满"
-                : "✨ 改写"}
+                ? t("rewrite.full")
+                : t("rewrite.label")}
           </button>
           <button
             type="button"
             onClick={onRemove}
-            title="删除这一条"
+            title={t("highlight.removeRow")}
             className="text-[12px] text-stone-gray hover:text-error"
           >
             ×
@@ -1468,17 +1480,18 @@ function RewritePreview({
   onAccept: () => void;
   onDiscard: () => void;
 }) {
+  const t = useTranslations("editor");
   return (
     <div className="motion-slide-in-soft ml-4 rounded-2xl bg-parchment ring-1 ring-border-warm px-4 py-4 space-y-3">
       <div>
-        <p className="text-[11px] text-stone-gray mb-1 tracking-wide">原文</p>
+        <p className="text-[11px] text-stone-gray mb-1 tracking-wide">{t("rewrite.original")}</p>
         <p className="text-[13px] text-olive-gray leading-relaxed line-through decoration-stone-gray/60">
           {block.original}
         </p>
       </div>
       <div>
         <p className="text-[11px] text-terracotta mb-1 tracking-wide">
-          AI 改写
+          {t("rewrite.aiRewrite")}
         </p>
         <p className="text-[13.5px] text-near-black leading-relaxed">
           {block.rewritten}
@@ -1487,7 +1500,7 @@ function RewritePreview({
       {block.reasons.length > 0 && (
         <div>
           <p className="text-[11px] text-stone-gray mb-1 tracking-wide">
-            为什么这样改
+            {t("rewrite.why")}
           </p>
           <ul className="text-[12.5px] text-olive-gray leading-relaxed space-y-0.5">
             {block.reasons.map((r, i) => (
@@ -1499,7 +1512,7 @@ function RewritePreview({
       {block.preservedFacts.length > 0 && (
         <div>
           <p className="text-[11px] text-stone-gray mb-1 tracking-wide">
-            保留的事实
+            {t("rewrite.preservedFacts")}
           </p>
           <p className="text-[12px] text-olive-gray leading-relaxed">
             {block.preservedFacts.join("、")}
@@ -1512,14 +1525,14 @@ function RewritePreview({
           onClick={onAccept}
           className="rounded-lg bg-terracotta text-ivory px-3 py-1.5 text-[12.5px] font-medium hover:bg-coral transition"
         >
-          采用
+          {t("rewrite.accept")}
         </button>
         <button
           type="button"
           onClick={onDiscard}
           className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
         >
-          放弃
+          {t("rewrite.discard")}
         </button>
       </div>
     </div>
@@ -1535,6 +1548,7 @@ function SkillItemsEditor({
   register: UseFormRegister<ResumeContent>;
   nestIndex: number;
 }) {
+  const t = useTranslations("editor");
   const { fields, append, remove } = useFieldArray({
     control,
     name: `skills.${nestIndex}.items` as never,
@@ -1565,7 +1579,7 @@ function SkillItemsEditor({
         onClick={() => append("" as never)}
         className="text-[12px] text-terracotta hover:underline"
       >
-        + 添加
+        {t("skills.addItem")}
       </button>
     </div>
   );
@@ -1647,14 +1661,15 @@ function IconButton({
 }
 
 function SaveIndicator({ state }: { state: SaveState }) {
+  const t = useTranslations("editor");
   if (state.kind === "idle") {
-    return <span className="text-[12.5px] text-stone-gray">等待输入</span>;
+    return <span className="text-[12.5px] text-stone-gray">{t("save.idle")}</span>;
   }
   if (state.kind === "dirty") {
     return (
       <span className="text-[12.5px] text-olive-gray flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-olive-gray animate-pulse" />
-        编辑中
+        {t("save.dirty")}
       </span>
     );
   }
@@ -1662,19 +1677,21 @@ function SaveIndicator({ state }: { state: SaveState }) {
     return (
       <span className="text-[12.5px] text-olive-gray flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-terracotta animate-pulse" />
-        保存中…
+        {t("save.saving")}
       </span>
     );
   }
   if (state.kind === "saved") {
     return (
       <span className="text-[12.5px] text-olive-gray">
-        已保存 · {formatTime(state.at)}
+        {t("save.saved", { time: formatTime(state.at) })}
       </span>
     );
   }
   return (
-    <span className="text-[12.5px] text-error">保存失败：{state.message}</span>
+    <span className="text-[12.5px] text-error">
+      {t("save.error", { message: state.message })}
+    </span>
   );
 }
 
@@ -1696,19 +1713,20 @@ function MatchPanel({
   onReset: () => void;
   onDismiss: () => void;
 }) {
+  const t = useTranslations("editor");
   return (
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">岗位匹配</p>
+          <p className="overline mb-1.5">{t("match.overline")}</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "input"
-              ? "贴一段 JD，对比一下"
+              ? t("match.inputTitle")
               : state.kind === "running"
-                ? "正在比对 JD 和简历…"
+                ? t("match.runningTitle")
                 : state.kind === "result"
-                  ? `匹配度 · ${state.data.overallScore} 分`
-                  : "匹配失败"}
+                  ? t("match.resultTitle", { score: state.data.overallScore })
+                  : t("match.errorTitle")}
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -1718,7 +1736,7 @@ function MatchPanel({
               onClick={onReset}
               className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
             >
-              换一份 JD
+              {t("match.changeJd")}
             </button>
           )}
           <button
@@ -1726,7 +1744,7 @@ function MatchPanel({
             onClick={onDismiss}
             className="rounded-lg text-stone-gray px-2.5 py-1.5 text-[12.5px] hover:text-near-black transition"
           >
-            收起
+            {t("panel.hide")}
           </button>
         </div>
       </div>
@@ -1737,14 +1755,16 @@ function MatchPanel({
             value={jd}
             onChange={(e) => onJdChange(e.target.value)}
             rows={8}
-            placeholder="把目标岗位的职位描述整段粘进来——职责、要求、加分项都带上。"
+            placeholder={t("match.jdPlaceholder")}
             className="w-full rounded-xl bg-white ring-1 ring-border-warm px-4 py-3 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
           />
           <div className="flex items-center justify-between">
             <p className="text-[12px] text-stone-gray">
               {jd.trim().length < 40
-                ? `还差 ${Math.max(0, 40 - jd.trim().length)} 个字开始分析`
-                : `${jd.trim().length} 字，够了`}
+                ? t("match.charsNeeded", {
+                    n: Math.max(0, 40 - jd.trim().length),
+                  })
+                : t("match.charsEnough", { n: jd.trim().length })}
             </p>
             <button
               type="button"
@@ -1752,7 +1772,7 @@ function MatchPanel({
               disabled={jd.trim().length < 40}
               className="rounded-xl bg-terracotta text-ivory px-5 py-2 text-[13.5px] font-medium hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              开始分析
+              {t("match.analyze")}
             </button>
           </div>
         </div>
@@ -1760,7 +1780,7 @@ function MatchPanel({
 
       {state.kind === "running" && (
         <p className="text-[13.5px] text-olive-gray leading-relaxed">
-          AI 正在抽取 JD 关键词、逐项核对简历，一般 10-20 秒。
+          {t("match.runningHint")}
         </p>
       )}
 
@@ -1776,6 +1796,7 @@ function MatchPanel({
 }
 
 function MatchReport({ data }: { data: MatchResult }) {
+  const t = useTranslations("editor");
   return (
     <div className="space-y-7">
       <div className="grid grid-cols-[auto_1fr] gap-5 sm:gap-8 items-start">
@@ -1784,7 +1805,7 @@ function MatchReport({ data }: { data: MatchResult }) {
             {data.overallScore}
           </span>
           <span className="text-[11px] text-stone-gray mt-1 tracking-wide">
-            匹配度 · 满分 100
+            {t("match.scoreCaption")}
           </span>
         </div>
         <p className="text-[13.5px] sm:text-[14px] text-charcoal-warm leading-relaxed pt-1">
@@ -1793,16 +1814,14 @@ function MatchReport({ data }: { data: MatchResult }) {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {([
-          ["skills", "技能"],
-          ["experience", "经历"],
-          ["tone", "语气"],
-        ] as const).map(([key, label]) => {
+        {(["skills", "experience", "tone"] as const).map((key) => {
           const score = data.dimensionScores[key];
           return (
             <div key={key}>
               <div className="flex items-baseline justify-between mb-1.5">
-                <span className="text-[11.5px] text-olive-gray">{label}</span>
+                <span className="text-[11.5px] text-olive-gray">
+                  {t(`match.dim.${key}`)}
+                </span>
                 <span className="text-[13px] text-near-black tabular-nums">
                   {score}
                 </span>
@@ -1821,10 +1840,10 @@ function MatchReport({ data }: { data: MatchResult }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <p className="text-[12.5px] text-olive-gray tracking-wide mb-2">
-            命中关键词（{data.matchedKeywords.length}）
+            {t("match.matched", { n: data.matchedKeywords.length })}
           </p>
           {data.matchedKeywords.length === 0 ? (
-            <p className="text-[12.5px] text-stone-gray">（无）</p>
+            <p className="text-[12.5px] text-stone-gray">{t("match.none")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {data.matchedKeywords.map((k, i) => (
@@ -1840,10 +1859,10 @@ function MatchReport({ data }: { data: MatchResult }) {
         </div>
         <div>
           <p className="text-[12.5px] text-olive-gray tracking-wide mb-2">
-            缺失关键词（{data.missingKeywords.length}）
+            {t("match.missing", { n: data.missingKeywords.length })}
           </p>
           {data.missingKeywords.length === 0 ? (
-            <p className="text-[12.5px] text-stone-gray">（无）</p>
+            <p className="text-[12.5px] text-stone-gray">{t("match.none")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {data.missingKeywords.map((k, i) => (
@@ -1862,7 +1881,7 @@ function MatchReport({ data }: { data: MatchResult }) {
       {data.suggestions.length > 0 && (
         <div>
           <p className="text-[12.5px] text-olive-gray tracking-wide mb-3">
-            针对性建议（{data.suggestions.length}）
+            {t("match.suggestions", { n: data.suggestions.length })}
           </p>
           <ul className="space-y-3">
             {data.suggestions.map((s, i) => (
@@ -1879,7 +1898,7 @@ function MatchReport({ data }: { data: MatchResult }) {
                 {s.suggestedHighlight && (
                   <div className="mt-3 rounded-xl bg-parchment px-4 py-2.5">
                     <p className="text-[11px] text-terracotta tracking-wide mb-1">
-                      可以加进经历的一条
+                      {t("match.suggestedHighlight")}
                     </p>
                     <p className="text-[13px] text-near-black leading-relaxed">
                       {s.suggestedHighlight}
@@ -1902,6 +1921,7 @@ function ExportDropdown({
   resumeId: string;
   canEnglish: boolean;
 }) {
+  const t = useTranslations("editor");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -1930,7 +1950,7 @@ function ExportDropdown({
         onClick={() => setOpen((p) => !p)}
         className="rounded-lg bg-warm-sand px-3 py-1.5 text-[13px] text-charcoal-warm hover:bg-border-cream transition"
       >
-        导出 PDF ▾
+        {t("export.button")}
       </button>
       {open && (
         <div className="motion-slide-in-soft absolute right-0 top-full mt-1 min-w-[180px] rounded-xl bg-white ring-1 ring-border-warm shadow-[0_12px_32px_-16px_rgba(20,20,19,0.18)] py-1 z-30">
@@ -1939,7 +1959,7 @@ function ExportDropdown({
             onClick={() => setOpen(false)}
             className="block px-4 py-2 text-[13px] text-near-black hover:bg-parchment transition"
           >
-            中文版
+            {t("export.zhVersion")}
           </a>
           {canEnglish ? (
             <a
@@ -1947,7 +1967,7 @@ function ExportDropdown({
               onClick={() => setOpen(false)}
               className="block px-4 py-2 text-[13px] text-near-black hover:bg-parchment transition"
             >
-              English version
+              {t("export.enVersion")}
             </a>
           ) : (
             <Link
@@ -1955,7 +1975,7 @@ function ExportDropdown({
               onClick={() => setOpen(false)}
               className="block px-4 py-2 text-[13px] text-stone-gray hover:bg-parchment transition"
             >
-              English · Pro 专属
+              {t("export.enPro")}
             </Link>
           )}
         </div>
@@ -1983,6 +2003,7 @@ function CoverLetterPanel({
   onReset: () => void;
   onDismiss: () => void;
 }) {
+  const t = useTranslations("editor");
   const [copied, setCopied] = useState(false);
 
   const copyLetter = async () => {
@@ -2000,15 +2021,15 @@ function CoverLetterPanel({
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">求职信</p>
+          <p className="overline mb-1.5">{t("cover.overline")}</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "input"
-              ? "写一封打动 HR 的求职信"
+              ? t("cover.inputTitle")
               : state.kind === "running"
-                ? "AI 正在把你的经历变成一封信…"
+                ? t("cover.runningTitle")
                 : state.kind === "result"
-                  ? "这是 AI 写的版本"
-                  : "求职信生成失败"}
+                  ? t("cover.resultTitle")
+                  : t("cover.errorTitle")}
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -2019,14 +2040,14 @@ function CoverLetterPanel({
                 onClick={copyLetter}
                 className="rounded-lg bg-terracotta text-ivory px-3 py-1.5 text-[12.5px] hover:bg-coral transition"
               >
-                {copied ? "已复制" : "复制"}
+                {copied ? t("copied") : t("copy")}
               </button>
               <button
                 type="button"
                 onClick={onReset}
                 className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
               >
-                再生成
+                {t("cover.regenerate")}
               </button>
             </>
           )}
@@ -2035,7 +2056,7 @@ function CoverLetterPanel({
             onClick={onDismiss}
             className="rounded-lg text-stone-gray px-2.5 py-1.5 text-[12.5px] hover:text-near-black transition"
           >
-            收起
+            {t("panel.hide")}
           </button>
         </div>
       </div>
@@ -2044,25 +2065,25 @@ function CoverLetterPanel({
         <div className="space-y-3">
           <div>
             <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
-              岗位描述（可选，贴了信会更贴岗位）
+              {t("cover.jdLabel")}
             </label>
             <textarea
               value={jd}
               onChange={(e) => onJdChange(e.target.value)}
               rows={5}
-              placeholder="把目标岗位的 JD 粘进来；不贴也行，AI 会按你的「目标岗位」写通用信。"
+              placeholder={t("cover.jdPlaceholder")}
               className="w-full rounded-xl bg-white ring-1 ring-border-warm px-4 py-3 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
             />
           </div>
           <div>
             <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
-              补充说明（可选）
+              {t("cover.extraLabel")}
             </label>
             <textarea
               value={extra}
               onChange={(e) => onExtraChange(e.target.value)}
               rows={2}
-              placeholder="例如「公司叫 Anthropic」「招聘经理叫 Karen」「我想强调我对 AI 安全的兴趣」"
+              placeholder={t("cover.extraPlaceholder")}
               className="w-full rounded-xl bg-white ring-1 ring-border-warm px-4 py-3 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
             />
           </div>
@@ -2072,7 +2093,7 @@ function CoverLetterPanel({
               onClick={onSubmit}
               className="rounded-xl bg-terracotta text-ivory px-5 py-2 text-[13.5px] font-medium hover:bg-coral transition"
             >
-              生成求职信
+              {t("cover.generate")}
             </button>
           </div>
         </div>
@@ -2080,7 +2101,7 @@ function CoverLetterPanel({
 
       {state.kind === "running" && (
         <p className="text-[13.5px] text-olive-gray leading-relaxed">
-          AI 正在综合简历里最打动人的经历，组织成 300-400 字的信。10-20 秒。
+          {t("cover.runningHint")}
         </p>
       )}
 
@@ -2112,6 +2133,7 @@ function VersionsPanel({
   flushPendingSave: () => Promise<void>;
   onRestored: (content: ResumeContent) => void;
 }) {
+  const t = useTranslations("editor");
   const [open, setOpen] = useState(false);
   const [versions, setVersions] = useState<VersionSummary[]>(initialVersions);
   const [label, setLabel] = useState("");
@@ -2147,7 +2169,7 @@ function VersionsPanel({
   };
 
   const onRestore = async (versionId: string) => {
-    if (!confirm("恢复后当前内容会被替换，当前版本会自动保存进历史。继续吗？")) {
+    if (!confirm(t("versions.restoreConfirm"))) {
       return;
     }
     setError(null);
@@ -2171,18 +2193,18 @@ function VersionsPanel({
         className="w-full flex items-start justify-between gap-4 text-left"
       >
         <div>
-          <p className="overline mb-1.5">版本历史</p>
+          <p className="overline mb-1.5">{t("versions.overline")}</p>
           <h2 className="font-serif text-[17px] text-near-black">
-            想改之前先存一版
+            {t("versions.title")}
           </h2>
           <p className="mt-1 text-[12.5px] text-stone-gray">
             {versions.length > 0
-              ? `已有 ${versions.length} 个快照`
-              : "还没有快照，随时点开保存一份"}
+              ? t("versions.count", { n: versions.length })
+              : t("versions.empty")}
           </p>
         </div>
         <span className="text-[12px] text-stone-gray shrink-0 pt-2">
-          {open ? "收起 −" : "展开 +"}
+          {open ? t("versions.hide") : t("versions.show")}
         </span>
       </button>
 
@@ -2192,7 +2214,7 @@ function VersionsPanel({
             <input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="版本标签（可选，如「投前端版」）"
+              placeholder={t("versions.labelPlaceholder")}
               maxLength={80}
               className={inputClass + " flex-1"}
             />
@@ -2202,14 +2224,13 @@ function VersionsPanel({
               disabled={busy === "saving"}
               className="rounded-lg bg-terracotta text-ivory px-4 py-2 text-[13px] hover:bg-coral disabled:opacity-60 transition"
             >
-              {busy === "saving" ? "保存中…" : "保存为版本"}
+              {busy === "saving" ? t("versions.saving") : t("versions.save")}
             </button>
           </div>
 
           {versions.length === 0 ? (
             <p className="text-[12.5px] text-stone-gray leading-relaxed">
-              保存后这里会列出所有快照。点「恢复」把内容回到那个时间点——
-              恢复前当前内容会自动存一份，所以随时可以撤回来。
+              {t("versions.hint")}
             </p>
           ) : (
             <ul className="space-y-2">
@@ -2220,7 +2241,7 @@ function VersionsPanel({
                 >
                   <div className="min-w-0">
                     <p className="font-serif text-[14px] text-near-black truncate">
-                      {v.label || "未命名快照"}
+                      {v.label || t("versions.untitled")}
                     </p>
                     <p className="text-[11.5px] text-stone-gray mt-0.5">
                       {new Intl.DateTimeFormat("zh-CN", {
@@ -2237,7 +2258,7 @@ function VersionsPanel({
                     disabled={busy === v.id}
                     className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12px] hover:bg-border-cream disabled:opacity-60 transition"
                   >
-                    {busy === v.id ? "恢复中…" : "恢复"}
+                    {busy === v.id ? t("versions.restoring") : t("versions.restore")}
                   </button>
                 </li>
               ))}
@@ -2254,13 +2275,18 @@ function VersionsPanel({
 }
 
 // react-pdf's browser build is heavy + client-only — load it on demand.
+function LivePreviewLoading() {
+  const t = useTranslations("editor");
+  return (
+    <div className="flex h-[72vh] items-center justify-center rounded-xl ring-1 ring-border-warm bg-white">
+      <p className="text-[13px] text-stone-gray">{t("template.loadingPreview")}</p>
+    </div>
+  );
+}
+
 const LivePreview = dynamic(() => import("./LivePreview"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-[72vh] items-center justify-center rounded-xl ring-1 ring-border-warm bg-white">
-      <p className="text-[13px] text-stone-gray">正在加载预览引擎…</p>
-    </div>
-  ),
+  loading: () => <LivePreviewLoading />,
 });
 
 const PREVIEW_DEBOUNCE_MS = 500;
@@ -2276,6 +2302,7 @@ function TemplatePanel({
   initialSectionOrder: SectionKey[];
   control: Control<ResumeContent>;
 }) {
+  const t = useTranslations("editor");
   const [template, setTemplate] = useState<TemplateId>(initialTemplate);
   const [order, setOrder] = useState<SectionKey[]>(initialSectionOrder);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -2320,9 +2347,9 @@ function TemplatePanel({
     <section className="rounded-3xl bg-ivory ring-1 ring-border-warm px-6 md:px-8 py-6">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <p className="overline mb-1.5">外观</p>
+          <p className="overline mb-1.5">{t("template.overline")}</p>
           <h2 className="font-serif text-[17px] text-near-black">
-            选一个模板，实时看导出效果
+            {t("template.title")}
           </h2>
         </div>
         <button
@@ -2333,7 +2360,7 @@ function TemplatePanel({
           }}
           className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
         >
-          {previewOpen ? "收起预览" : "实时预览"}
+          {previewOpen ? t("template.hidePreview") : t("template.showPreview")}
         </button>
       </div>
 
@@ -2353,10 +2380,10 @@ function TemplatePanel({
               }
             >
               <p className="font-serif text-[14.5px] text-near-black mb-0.5">
-                {tpl.name}
+                {t(`template.${tpl.id}.name`)}
               </p>
               <p className="text-[11.5px] text-stone-gray leading-snug">
-                {tpl.desc}
+                {t(`template.${tpl.id}.desc`)}
               </p>
             </button>
           );
@@ -2365,7 +2392,7 @@ function TemplatePanel({
 
       <div className="mt-5">
         <p className="text-[12px] text-olive-gray mb-2 tracking-wide">
-          模块顺序（标题区始终在最前；空模块不会出现在导出里）
+          {t("template.orderHint")}
         </p>
         <ul className="flex flex-wrap gap-1.5">
           {order.map((key, i) => (
@@ -2374,14 +2401,14 @@ function TemplatePanel({
               className="inline-flex items-center gap-1.5 rounded-lg bg-white ring-1 ring-border-warm pl-3 pr-1.5 py-1"
             >
               <span className="text-[12.5px] text-charcoal-warm">
-                {SECTION_LABELS[key]}
+                {t(`section.${key}`)}
               </span>
               <span className="flex items-center">
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
-                  title="上移"
+                  title={t("move.up")}
                   className="w-5 h-5 rounded text-[12px] text-stone-gray hover:bg-warm-sand hover:text-near-black disabled:opacity-30 disabled:pointer-events-none transition"
                 >
                   ↑
@@ -2390,7 +2417,7 @@ function TemplatePanel({
                   type="button"
                   onClick={() => move(i, 1)}
                   disabled={i === order.length - 1}
-                  title="下移"
+                  title={t("move.down")}
                   className="w-5 h-5 rounded text-[12px] text-stone-gray hover:bg-warm-sand hover:text-near-black disabled:opacity-30 disabled:pointer-events-none transition"
                 >
                   ↓
@@ -2410,7 +2437,7 @@ function TemplatePanel({
           />
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-[12px] text-stone-gray">
-              边改边看 · 预览用轻量字体，极少数生僻字可能不显示，导出 PDF 不受影响。
+              {t("template.previewNote")}
             </p>
             <a
               href={`/api/resumes/${resumeId}/pdf?template=${template}`}
@@ -2418,7 +2445,7 @@ function TemplatePanel({
               rel="noopener noreferrer"
               className="shrink-0 text-[12px] text-terracotta hover:underline"
             >
-              用完整字体打开 ↗
+              {t("template.openFull")}
             </a>
           </div>
         </div>
@@ -2427,10 +2454,10 @@ function TemplatePanel({
   );
 }
 
-const SHARE_EXPIRY_OPTIONS: { label: string; days: number | null }[] = [
-  { label: "永久", days: null },
-  { label: "7 天", days: 7 },
-  { label: "30 天", days: 30 },
+const SHARE_EXPIRY_OPTIONS: { days: number | null }[] = [
+  { days: null },
+  { days: 7 },
+  { days: 30 },
 ];
 
 function formatExpiry(iso: string) {
@@ -2448,6 +2475,7 @@ function SharePanel({
   resumeId: string;
   initial: ShareSnapshot;
 }) {
+  const t = useTranslations("editor");
   const [state, setState] = useState<ShareSnapshot>(initial);
   const [pending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
@@ -2504,7 +2532,7 @@ function SharePanel({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      setError("复制失败，请手动选中链接");
+      setError(t("share.copyError"));
     }
   };
 
@@ -2512,9 +2540,9 @@ function SharePanel({
     <section className="rounded-3xl bg-ivory ring-1 ring-border-warm px-6 md:px-8 py-6">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <p className="overline mb-1.5">分享这份简历</p>
+          <p className="overline mb-1.5">{t("share.overline")}</p>
           <h2 className="font-serif text-[17px] text-near-black">
-            给 HR 一个链接，而不是一份附件
+            {t("share.title")}
           </h2>
         </div>
         {state.enabled ? (
@@ -2524,7 +2552,7 @@ function SharePanel({
             disabled={pending}
             className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition disabled:opacity-60"
           >
-            {pending ? "处理中…" : "关闭分享"}
+            {pending ? t("share.disabling") : t("share.disable")}
           </button>
         ) : null}
       </div>
@@ -2543,41 +2571,42 @@ function SharePanel({
               onClick={copy}
               className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-2 text-[13px] hover:bg-border-cream transition"
             >
-              {copied ? "已复制" : "复制"}
+              {copied ? t("copied") : t("copy")}
             </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-[12px]">
             <span className="text-stone-gray">
               {state.expiresAt
-                ? `${formatExpiry(state.expiresAt)} 过期`
-                : "永久有效"}
+                ? t("share.expiresOn", { date: formatExpiry(state.expiresAt) })
+                : t("share.neverExpires")}
             </span>
             <span className="text-border-cream">·</span>
             {state.hasPasscode ? (
               <span className="inline-flex items-center gap-1 text-terracotta">
-                已设访问码
+                {t("share.hasPasscode")}
                 <button
                   type="button"
                   onClick={removePasscode}
                   disabled={pending}
                   className="text-stone-gray hover:text-error underline disabled:opacity-60"
                 >
-                  移除
+                  {t("share.removePasscode")}
                 </button>
               </span>
             ) : (
-              <span className="text-stone-gray">无访问码</span>
+              <span className="text-stone-gray">{t("share.noPasscode")}</span>
             )}
             <span className="text-border-cream">·</span>
             <span className="text-stone-gray">
               {state.viewCount > 0
-                ? `被查看 ${state.viewCount} 次${
-                    state.lastViewedAt
-                      ? ` · 最近 ${formatExpiry(state.lastViewedAt)}`
-                      : ""
-                  }`
-                : "还没有人查看"}
+                ? t("share.viewedCount", { count: state.viewCount }) +
+                  (state.lastViewedAt
+                    ? t("share.lastViewedSuffix", {
+                        date: formatExpiry(state.lastViewedAt),
+                      })
+                    : "")
+                : t("share.noViews")}
             </span>
           </div>
 
@@ -2589,18 +2618,17 @@ function SharePanel({
             hasPasscode={state.hasPasscode}
             pending={pending}
             onSave={saveSettings}
-            saveLabel="更新设置"
+            saveLabel={t("share.updateSettings")}
           />
 
           <p className="text-[12px] text-stone-gray leading-relaxed">
-            拿到链接的人能查看你最新版本的 PDF；设了访问码则需先输入。编辑会在约
-            1 分钟内同步过去。
+            {t("share.liveHint")}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <p className="text-[13px] text-olive-gray leading-relaxed">
-            开启后生成一个只读链接，对方不需要登录。可以设过期时间和访问码，随时关闭。
+            {t("share.offHint")}
           </p>
           <ShareSettings
             expiryDays={expiryDays}
@@ -2610,7 +2638,7 @@ function SharePanel({
             hasPasscode={false}
             pending={pending}
             onSave={enableWithSettings}
-            saveLabel={pending ? "生成中…" : "生成分享链接"}
+            saveLabel={pending ? t("share.generating") : t("share.generateLink")}
             primary
           />
         </div>
@@ -2644,16 +2672,17 @@ function ShareSettings({
   saveLabel: string;
   primary?: boolean;
 }) {
+  const t = useTranslations("editor");
   return (
     <div className="rounded-2xl bg-parchment ring-1 ring-border-warm px-4 py-4 space-y-3">
       <div>
         <p className="text-[12px] text-olive-gray mb-1.5 tracking-wide">
-          有效期
+          {t("share.validity")}
         </p>
         <div className="flex gap-1.5">
           {SHARE_EXPIRY_OPTIONS.map((opt) => (
             <button
-              key={opt.label}
+              key={opt.days ?? "forever"}
               type="button"
               onClick={() => onExpiryChange(opt.days)}
               className={
@@ -2663,19 +2692,19 @@ function ShareSettings({
                   : "bg-white text-charcoal-warm ring-border-warm hover:ring-terracotta")
               }
             >
-              {opt.label}
+              {t(`share.expiry.${opt.days ?? "forever"}`)}
             </button>
           ))}
         </div>
       </div>
       <div>
         <p className="text-[12px] text-olive-gray mb-1.5 tracking-wide">
-          访问码（可选）
+          {t("share.passcodeLabel")}
         </p>
         <input
           value={passcode}
           onChange={(e) => onPasscodeChange(e.target.value)}
-          placeholder={hasPasscode ? "留空保持不变，输入则更新" : "例如 4-6 位数字"}
+          placeholder={hasPasscode ? t("share.passcodeKeep") : t("share.passcodePlaceholder")}
           maxLength={12}
           className="w-full rounded-lg bg-white ring-1 ring-border-warm px-3 py-2 text-[13.5px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
         />
@@ -2699,22 +2728,18 @@ function ShareSettings({
 
 const INTERVIEW_CATEGORY: Record<
   InterviewQuestion["category"],
-  { label: string; className: string }
+  { className: string }
 > = {
   behavioral: {
-    label: "行为",
     className: "bg-warm-sand text-charcoal-warm ring-border-warm",
   },
   technical: {
-    label: "技术",
     className: "bg-terracotta/10 text-terracotta ring-terracotta/20",
   },
   project: {
-    label: "项目",
     className: "bg-terracotta/10 text-terracotta ring-terracotta/20",
   },
   fit: {
-    label: "匹配",
     className: "bg-warm-sand text-charcoal-warm ring-border-warm",
   },
 };
@@ -2734,19 +2759,22 @@ function InterviewPanel({
   onReset: () => void;
   onDismiss: () => void;
 }) {
+  const t = useTranslations("editor");
   return (
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">面试题预测</p>
+          <p className="overline mb-1.5">{t("interview.overline")}</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "input"
-              ? "根据你的简历，预测会被问什么"
+              ? t("interview.inputTitle")
               : state.kind === "running"
-                ? "正在按简历推演面试官的问题…"
+                ? t("interview.runningTitle")
                 : state.kind === "result"
-                  ? `为你准备了 ${state.data.questions.length} 个问题`
-                  : "面试预测失败"}
+                  ? t("interview.resultTitle", {
+                      n: state.data.questions.length,
+                    })
+                  : t("interview.errorTitle")}
           </h2>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -2756,7 +2784,7 @@ function InterviewPanel({
               onClick={onReset}
               className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
             >
-              换个 JD 重测
+              {t("interview.changeJd")}
             </button>
           )}
           <button
@@ -2764,7 +2792,7 @@ function InterviewPanel({
             onClick={onDismiss}
             className="rounded-lg text-stone-gray px-2.5 py-1.5 text-[12.5px] hover:text-near-black transition"
           >
-            收起
+            {t("panel.hide")}
           </button>
         </div>
       </div>
@@ -2773,13 +2801,13 @@ function InterviewPanel({
         <div className="space-y-3">
           <div>
             <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
-              岗位描述（可选，贴了问题更贴岗位）
+              {t("interview.jdLabel")}
             </label>
             <textarea
               value={jd}
               onChange={(e) => onJdChange(e.target.value)}
               rows={5}
-              placeholder="把目标岗位 JD 粘进来；不贴也行，AI 会按你的「目标岗位」出题。"
+              placeholder={t("interview.jdPlaceholder")}
               className="w-full rounded-xl bg-white ring-1 ring-border-warm px-4 py-3 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
             />
           </div>
@@ -2789,7 +2817,7 @@ function InterviewPanel({
               onClick={onSubmit}
               className="rounded-xl bg-terracotta text-ivory px-5 py-2 text-[13.5px] font-medium hover:bg-coral transition"
             >
-              开始预测
+              {t("interview.predict")}
             </button>
           </div>
         </div>
@@ -2797,7 +2825,7 @@ function InterviewPanel({
 
       {state.kind === "running" && (
         <p className="text-[13.5px] text-olive-gray leading-relaxed">
-          AI 正在通读简历、挑出最该准备的问题，一般 10-20 秒。
+          {t("interview.runningHint")}
         </p>
       )}
 
@@ -2820,18 +2848,18 @@ function InterviewPanel({
                   <span
                     className={`mt-0.5 shrink-0 rounded-md ring-1 px-2 py-0.5 text-[11px] ${cat.className}`}
                   >
-                    {cat.label}
+                    {t(`interview.cat.${q.category}`)}
                   </span>
                   <p className="font-serif text-[15px] text-near-black leading-snug">
                     {q.question}
                   </p>
                 </div>
                 <p className="text-[12.5px] text-stone-gray leading-relaxed mb-1.5">
-                  考察：{q.probe}
+                  {t("interview.probe", { probe: q.probe })}
                 </p>
                 <div className="rounded-xl bg-parchment px-4 py-2.5">
                   <p className="text-[11px] text-terracotta tracking-wide mb-1">
-                    怎么答
+                    {t("interview.howToAnswer")}
                   </p>
                   <p className="text-[13px] text-olive-gray leading-relaxed">
                     {q.tip}
@@ -2853,6 +2881,7 @@ function TargetRolePicker({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const t = useTranslations("editor");
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
@@ -2870,7 +2899,7 @@ function TargetRolePicker({
                   : "bg-white text-charcoal-warm ring-border-warm hover:ring-terracotta hover:text-near-black")
               }
             >
-              {cat.name}
+              {t(`jobs.${cat.key}`)}
             </button>
           );
         })}
@@ -2879,21 +2908,20 @@ function TargetRolePicker({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="或者写得更具体，例如「前端工程师 · React 方向」"
+        placeholder={t("targetRole.placeholder")}
         className={inputClass}
       />
     </div>
   );
 }
 
-const dimensionLabels: Record<keyof CheckupResult["dimensionScores"], string> =
-  {
-    structure: "结构",
-    jobMatch: "岗位匹配",
-    professionalTone: "专业语气",
-    outcome: "产出描述",
-    conciseness: "简洁度",
-  };
+const DIMENSION_KEYS = [
+  "structure",
+  "jobMatch",
+  "professionalTone",
+  "outcome",
+  "conciseness",
+] as const;
 
 const severityOrder: Record<CheckupIssue["severity"], number> = {
   critical: 0,
@@ -2901,20 +2929,14 @@ const severityOrder: Record<CheckupIssue["severity"], number> = {
   suggestion: 2,
 };
 
-const severityStyle: Record<
-  CheckupIssue["severity"],
-  { label: string; className: string }
-> = {
+const severityStyle: Record<CheckupIssue["severity"], { className: string }> = {
   critical: {
-    label: "需要修改",
     className: "bg-error/10 text-error ring-error/20",
   },
   moderate: {
-    label: "可以更好",
     className: "bg-terracotta/10 text-terracotta ring-terracotta/20",
   },
   suggestion: {
-    label: "建议",
     className: "bg-warm-sand text-charcoal-warm ring-border-warm",
   },
 };
@@ -2928,17 +2950,18 @@ function CheckupPanel({
   onDismiss: () => void;
   onRerun: () => void;
 }) {
+  const t = useTranslations("editor");
   return (
     <section className="motion-slide-in-soft rounded-3xl bg-ivory ring-1 ring-border-warm px-5 md:px-8 py-6 md:py-7">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
-          <p className="overline mb-1.5">AI 体检报告</p>
+          <p className="overline mb-1.5">{t("checkup.overline")}</p>
           <h2 className="font-serif text-[20px] text-near-black">
             {state.kind === "running"
-              ? "正在读你的简历，别走开…"
+              ? t("checkup.runningTitle")
               : state.kind === "error"
-                ? "体检失败"
-                : "这份简历的五项打分"}
+                ? t("checkup.errorTitle")
+                : t("checkup.resultTitle")}
           </h2>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -2948,7 +2971,7 @@ function CheckupPanel({
               onClick={onRerun}
               className="rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12.5px] hover:bg-border-cream transition"
             >
-              重新体检
+              {t("checkup.rerun")}
             </button>
           )}
           <button
@@ -2956,14 +2979,14 @@ function CheckupPanel({
             onClick={onDismiss}
             className="rounded-lg text-stone-gray px-2.5 py-1.5 text-[12.5px] hover:text-near-black transition"
           >
-            收起
+            {t("panel.hide")}
           </button>
         </div>
       </div>
 
       {state.kind === "running" && (
         <p className="text-[13.5px] text-olive-gray leading-relaxed">
-          DeepSeek 正在按 5 个维度通读你的简历，一般 10-20 秒。
+          {t("checkup.runningHint")}
         </p>
       )}
 
@@ -2979,6 +3002,7 @@ function CheckupPanel({
 }
 
 function CheckupReport({ data }: { data: CheckupResult }) {
+  const t = useTranslations("editor");
   const sortedIssues = [...data.issues].sort(
     (a, b) => severityOrder[a.severity] - severityOrder[b.severity],
   );
@@ -2991,7 +3015,7 @@ function CheckupReport({ data }: { data: CheckupResult }) {
             {data.overallScore}
           </span>
           <span className="text-[11px] text-stone-gray mt-1 tracking-wide">
-            总分 · 满分 100
+            {t("checkup.scoreCaption")}
           </span>
         </div>
         <p className="text-[13.5px] sm:text-[14px] text-charcoal-warm leading-relaxed pt-1">
@@ -3000,15 +3024,13 @@ function CheckupReport({ data }: { data: CheckupResult }) {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        {(Object.keys(dimensionLabels) as Array<
-          keyof CheckupResult["dimensionScores"]
-        >).map((key) => {
+        {DIMENSION_KEYS.map((key) => {
           const score = data.dimensionScores[key];
           return (
             <div key={key}>
               <div className="flex items-baseline justify-between mb-1.5">
                 <span className="text-[11.5px] text-olive-gray">
-                  {dimensionLabels[key]}
+                  {t(`checkup.dim.${key}`)}
                 </span>
                 <span className="text-[13px] text-near-black tabular-nums">
                   {score}
@@ -3028,14 +3050,16 @@ function CheckupReport({ data }: { data: CheckupResult }) {
       {sortedIssues.length > 0 && (
         <div>
           <p className="text-[12.5px] text-olive-gray tracking-wide mb-3">
-            共 {sortedIssues.length} 条建议（按严重度排序）
+            {t("checkup.issuesCount", { n: sortedIssues.length })}
           </p>
           <ul className="space-y-3">
             {sortedIssues.map((issue, i) => {
               const sev = severityStyle[issue.severity];
-              const dim = dimensionLabels[
-                issue.dimension as keyof typeof dimensionLabels
-              ] ?? issue.dimension;
+              const dim = (DIMENSION_KEYS as readonly string[]).includes(
+                issue.dimension,
+              )
+                ? t(`checkup.dim.${issue.dimension}`)
+                : issue.dimension;
               return (
                 <li
                   key={i}
@@ -3045,7 +3069,7 @@ function CheckupReport({ data }: { data: CheckupResult }) {
                     <span
                       className={`rounded-md ring-1 px-2 py-0.5 text-[11px] font-medium ${sev.className}`}
                     >
-                      {sev.label}
+                      {t(`checkup.sev.${issue.severity}`)}
                     </span>
                     <span className="text-[11.5px] text-stone-gray">
                       {dim}
@@ -3065,7 +3089,7 @@ function CheckupReport({ data }: { data: CheckupResult }) {
                   {issue.suggestedRewrite && (
                     <div className="mt-3 rounded-xl bg-parchment px-4 py-2.5">
                       <p className="text-[11px] text-terracotta tracking-wide mb-1">
-                        可以这样写
+                        {t("checkup.suggestedRewrite")}
                       </p>
                       <p className="text-[13px] text-near-black leading-relaxed">
                         {issue.suggestedRewrite}

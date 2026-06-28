@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export function MfaChallenge({ next }: { next: string }) {
+  const t = useTranslations("mfa");
   const supabase = supabaseBrowser();
   const router = useRouter();
   const [factorId, setFactorId] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export function MfaChallenge({ next }: { next: string }) {
       code: code.trim(),
     });
     if (error) {
-      setError("验证码不对，再试一次。");
+      setError(t("error.invalid"));
       setBusy(false);
       return;
     }
@@ -52,7 +54,7 @@ export function MfaChallenge({ next }: { next: string }) {
         inputMode="numeric"
         autoComplete="one-time-code"
         autoFocus
-        placeholder="6 位动态码"
+        placeholder={t("placeholder")}
         onKeyDown={(e) => {
           if (e.key === "Enter" && code.trim().length >= 6) submit();
         }}
@@ -65,7 +67,7 @@ export function MfaChallenge({ next }: { next: string }) {
         disabled={busy || code.trim().length < 6}
         className="w-full rounded-xl bg-terracotta text-ivory py-3 text-[14.5px] font-medium hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
       >
-        {busy ? "验证中…" : "验证并进入"}
+        {busy ? t("button.verifying") : t("button.verify")}
       </button>
     </div>
   );

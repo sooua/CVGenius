@@ -21,5 +21,780 @@
     "resendIn": "Resend in {seconds}s",
     "resending": "Resending…",
     "checkSpam": "Check your spam folder too"
+  },
+  "dashboard": {
+    "overline": "Dashboard · Start here",
+    "greeting": "Welcome back, {name}.",
+    "intro": "Start by creating a resume—write down your basic info and experience, and AI will turn it into a polished CV.",
+    "myResumes": "My resumes",
+    "uploadPdf": "Upload PDF",
+    "newResume": "New resume",
+    "empty": {
+      "title": "Nothing here yet.",
+      "desc": "The fastest way to start is from a sample—we've pre-filled a complete new-grad resume you can edit directly. Already have one? Upload it and AI will structure it for you. Or start from a blank.",
+      "fromExample": "Start from a sample",
+      "uploadFile": "Upload PDF / Word",
+      "fromBlank": "Start from blank",
+      "step1": {
+        "title": "Add experience",
+        "desc": "Write in plain words, then ✨ expand into professional highlights in one click"
+      },
+      "step2": {
+        "title": "Run a checkup",
+        "desc": "AI scores you across 5 dimensions—just follow it and improve"
+      },
+      "step3": {
+        "title": "Export",
+        "desc": "Pick a template, preview live, export a bilingual PDF"
+      }
+    },
+    "usage": {
+      "title": "This month's AI usage",
+      "proUnlimited": "Pro · Unlimited",
+      "rewrite": "Rewrite",
+      "checkup": "Checkup",
+      "upload": "Parsing",
+      "unlimited": "Unlimited",
+      "usedUp": "Used up this month, resets on the 1st",
+      "remaining": "{count} left this month"
+    },
+    "account": {
+      "label": "Current account",
+      "planLocale": "Plan: {plan} · Language: {locale}",
+      "manage": "Manage subscription",
+      "upgrade": "Upgrade to Pro"
+    },
+    "sort": {
+      "updated": "Recently updated",
+      "created": "Recently created",
+      "name": "By name"
+    },
+    "search": {
+      "icon": "⌕",
+      "placeholder": "Search by name, headline, or target role",
+      "noMatch": "No resumes match “{query}”."
+    },
+    "row": {
+      "untitled": "Untitled resume",
+      "noHeadline": "No headline yet",
+      "targetRoleTitle": "Target role",
+      "deleting": "Deleting…",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel",
+      "cloneTitle": "Clone as a new version",
+      "clone": "Clone",
+      "pdfTitle": "Export PDF",
+      "deleteTitle": "Delete",
+      "delete": "Delete"
+    },
+    "badge": {
+      "checkupTitle": "Last checkup score",
+      "checkup": "Checkup"
+    }
+  },
+  "account": {
+    "metaTitle": "Account",
+    "backToDashboard": "Back to Dashboard",
+    "overline": "Account",
+    "title": "Account Settings",
+    "intro": "Here's your basic info. Email is managed by Supabase, so changing it means going through the Magic Link flow again.",
+    "subscription": {
+      "overline": "Subscription",
+      "proTitle": "You're on the Pro plan",
+      "freeTitle": "Free plan",
+      "proDesc": "Unlimited AI rewrites / checkups / PDF parsing unlocked.",
+      "freeDesc": "30 rewrites / 5 checkups / 3 parses per month. Upgrade to go unlimited.",
+      "manage": "Manage subscription",
+      "upgrade": "Upgrade to Pro",
+      "recentOrders": "Recent orders"
+    },
+    "order": {
+      "monthly": "Pro Monthly",
+      "oneTime": "One-time"
+    },
+    "session": {
+      "overline": "Sessions",
+      "title": "Sign in & out",
+      "desc": "After signing out, you'll need to sign in again with an email Magic Link.",
+      "signOutCurrent": "Sign out (this device)"
+    },
+    "status": {
+      "paid": "Paid",
+      "pending": "Processing",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "cancel": "Cancel",
+    "email": {
+      "label": "Email (for sign-in)",
+      "change": "Change",
+      "placeholder": "New email address",
+      "sending": "Sending…",
+      "sendConfirm": "Send confirmation",
+      "hint": "The change takes effect only after you click the confirmation link in the new inbox."
+    },
+    "name": {
+      "label": "Display name",
+      "placeholder": "e.g. Alex Chen",
+      "saving": "Saving…",
+      "save": "Save"
+    },
+    "locale": {
+      "label": "Interface language",
+      "switching": "Switching…",
+      "switch": "Switch"
+    },
+    "data": {
+      "overline": "Data & account",
+      "title": "Export & delete",
+      "desc": "Download all your data as a JSON file anytime, or permanently delete your account.",
+      "export": "Export my data",
+      "delete": "Delete account",
+      "deleteWarning": "This will <strong>permanently delete</strong> all your resumes, version history, AI records, and orders, and cancel any active subscription. <strong>This cannot be undone.</strong>",
+      "confirmLabel": "Type your email <email_node>{email}</email_node> to confirm",
+      "deleting": "Deleting…",
+      "confirmDelete": "I'm sure, delete permanently"
+    },
+    "mfa": {
+      "codeWrong": "That code isn't right. Try again.",
+      "overline": "Two-factor authentication (2FA)",
+      "title": "Add a second lock with an authenticator app",
+      "desc": "Once on, signing in requires a 6-digit code from your authenticator in addition to the email link.",
+      "enable": "Enable",
+      "disabling": "Disabling…",
+      "disable": "Disable",
+      "enabled": "Two-factor authentication is on.",
+      "enrollDesc": "Scan the QR code with an authenticator app (Google Authenticator, 1Password, Authy, etc.), or enter the key manually, then type the 6-digit code it generates.",
+      "qrAlt": "Two-factor authentication QR code",
+      "manualKey": "Manual key",
+      "codePlaceholder": "6-digit code",
+      "verifying": "Verifying…",
+      "confirmEnable": "Confirm & enable"
+    },
+    "sessionActions": {
+      "failed": "Something went wrong. Please try again later.",
+      "othersDone": "Signed out of all other devices; this device stays signed in.",
+      "desc": "Signed in on a public computer, or worried someone else is in your account? Sign out everywhere else in one click.",
+      "processing": "Processing…",
+      "signOutOthers": "Sign out other devices",
+      "signOutAll": "Sign out all devices"
+    }
+  },
+  "upload": {
+    "metaTitle": "Upload resume",
+    "backToDashboard": "Back to Dashboard",
+    "overline": "Start from an existing resume",
+    "heading": "Hand AI the resume you already have, structured in seconds",
+    "intro": "Upload a PDF, Word file, or just snap a photo of your resume. AI pulls out your education, projects, internships, skills, and awards, then drops them into the editor. From there you can rewrite, run a checkup, and export.",
+    "support": {
+      "title": "What's supported",
+      "line1": "· PDF, Word (.docx), and images (png/jpg), up to 5 MB",
+      "line2": "· Text-based PDF / Word is extracted directly; resume photos or screenshots go through AI recognition (OCR)",
+      "line3": "· Scanned PDFs have no extractable text—upload a screenshot, or switch to \"Paste text\"",
+      "line4": "· For legacy .doc files, save as .docx or export to PDF first",
+      "line5": "· Chinese or English both work; the closer the content is to a resume format, the more accurate the extraction",
+      "line6": "· We don't keep the original file—only the structured text"
+    },
+    "tab": {
+      "file": "Upload file",
+      "paste": "Paste text"
+    },
+    "dropzone": {
+      "title": "Drag a PDF, Word file, or resume photo here, or click to choose",
+      "hint": "Up to 5 MB · PDF, Word (.docx), images (png/jpg)"
+    },
+    "fileStatus": {
+      "ready": "Ready",
+      "error": "Issue"
+    },
+    "running": {
+      "note": "This takes about 15-30 seconds—don't close the page"
+    },
+    "stage": {
+      "reading": "Reading text from your file…",
+      "extracting": "Letting AI extract the structure…"
+    },
+    "button": {
+      "analyze": "Start analysis",
+      "change": "Use another",
+      "retry": "Try another"
+    },
+    "error": {
+      "legacyDoc": "Legacy .doc isn't supported yet—save as .docx or export to PDF",
+      "unsupported": "Only PDF, Word (.docx), and images (png/jpg) are supported",
+      "tooLarge": "File exceeds 5 MB"
+    },
+    "paste": {
+      "placeholder": "Paste your resume text here—for scans, turn them into text with a phone scanner app first, or copy from the original document. AI will structure it into a resume automatically.",
+      "remaining": "{count} more {count, plural, one {character} other {characters}} to start",
+      "charCount": "{count} {count, plural, one {character} other {characters}}",
+      "busyNote": " · Letting AI extract the structure, about 15-30 seconds",
+      "submit": "Structure it",
+      "submitting": "Structuring…"
+    }
+  },
+  "billing": {
+    "alreadyPro": {
+      "overline": "Already on Pro",
+      "title": "You're already a Pro user",
+      "desc": "Unlimited AI rewrites, checkups, and PDF parsing are all unlocked."
+    },
+    "backToDashboard": "Back to Dashboard",
+    "overline": "Subscription · {plan}",
+    "title": "Upgrade to FirstCV {plan}",
+    "intro": "Clicking the button below takes you to Stripe checkout. Once you've paid, come back here and you'll see the confirmation.",
+    "feature": {
+      "aiUnlimited": "· Unlimited AI rewrites & checkups",
+      "pdfUnlimited": "· Unlimited PDF upload & parsing",
+      "multiVersion": "· One profile · tailored versions per role (cloning supported)",
+      "prioritySupport": "· Priority support"
+    },
+    "canceledNotice": "Your last checkout was canceled. You can start again anytime.",
+    "goToCheckout": "Go to checkout",
+    "notNow": "Not now",
+    "accountFooter": "Account {email} · Checkout is handled by Stripe; we never see your card number.",
+    "success": {
+      "overlineDone": "Upgrade complete",
+      "overlinePending": "Payment processing",
+      "titleDone": "Thanks for supporting FirstCV",
+      "titlePending": "Payment submitted, awaiting confirmation",
+      "descDone": "Your Pro features are unlocked—unlimited AI rewrites, checkups, and upload parsing. Now you can polish every resume you have to perfection.",
+      "descPending": "Stripe just finished checkout, and we're receiving confirmation via webhook. Your account usually upgrades within a few seconds. If nothing changes after a minute, reach out to us.",
+      "refreshStatus": "Refresh status"
+    }
+  },
+  "mfa": {
+    "metaTitle": "Two-Factor Authentication",
+    "overline": "Two-Factor Authentication",
+    "title": "Verify your identity",
+    "description": "You've enabled two-factor authentication. Open your authenticator app and enter the current 6-digit code.",
+    "placeholder": "6-digit code",
+    "error": {
+      "invalid": "That code isn't right. Try again."
+    },
+    "button": {
+      "verifying": "Verifying…",
+      "verify": "Verify and continue"
+    }
+  },
+  "share": {
+    "expired": {
+      "title": "Link no longer available",
+      "desc": "This share link has been turned off or has expired. If you still need access, please ask the sender for a new one."
+    },
+    "gate": {
+      "overline": "Protected share",
+      "title": "Access code required",
+      "desc": "The sender set an access code for this resume. Enter it to view.",
+      "placeholder": "Access code",
+      "error": "Incorrect access code. Try again.",
+      "submit": "View resume"
+    },
+    "untitled": "Untitled resume",
+    "header": {
+      "overline": "FirstCV · Shared resume",
+      "openNewTab": "Open in new tab"
+    },
+    "iframeTitle": "{name} · Resume PDF"
+  },
+  "landing": {
+    "nav": {
+      "brandNote": "Notes",
+      "product": "Product",
+      "jobs": "Roles",
+      "philosophy": "Writing approach",
+      "pricing": "Pricing",
+      "login": "Log in",
+      "ctaShort": "Start",
+      "ctaLong": "Write your first"
+    },
+    "hero": {
+      "overline": "For everyone just starting their career",
+      "title": "A resume worth reading<br></br>starts with clearly explaining<br></br>what you've actually done.",
+      "description": "We're not a resume template tool, nor a flashy AI ghostwriter.<br></br>We help you take the real things you did in course projects, your capstone, and campus life,<br></br>and put them in professional language—so people want to sit down and talk with you.",
+      "ctaPrimary": "Start my first resume",
+      "ctaSecondary": "I already have one—help me improve it",
+      "badgeFree": "Free to start",
+      "badgeTime": "First draft in 10 minutes",
+      "badgeNoCard": "No credit card",
+      "art": {
+        "name": "Alex Chen",
+        "role": "New grad · Frontend Developer",
+        "projectLabel": "Projects",
+        "projectName": "Campus Secondhand Marketplace",
+        "projectBody": "Independently designed and built the listing, search, and chat modules, supporting 800+ daily active users on campus.",
+        "skillsLabel": "Skills",
+        "noteTitle": "AI rewrites for you",
+        "noteSub": "Less student-speak · Action verbs · Results"
+      }
+    },
+    "footer": {
+      "brandNote": "Notes",
+      "rights": "© {year} For everyone writing their first resume.",
+      "product": "Product",
+      "pricing": "Pricing",
+      "philosophy": "Writing approach",
+      "contact": "Contact"
+    },
+    "product": {
+      "overline": "What we do",
+      "title": "FirstCV does just three things",
+      "subtitle": "Not a template library, not a free-form generator, and we won't tell your story for you—we just help you explain your experience clearly.",
+      "feature": {
+        "write": {
+          "label": "Write",
+          "title": "Structured editor",
+          "body": "Organized by education, projects, and internships—just fill in the blanks. Cover basics, experience, skills, awards, and certificates in one place; every edit saves automatically."
+        },
+        "rewrite": {
+          "label": "Edit",
+          "title": "Sentence-by-sentence AI rewrite",
+          "body": "Pick a vague bullet and AI turns it into a professional, verb-driven, number-backed line in 5 seconds. Every rewrite explains why—and which original facts it kept."
+        },
+        "review": {
+          "label": "Review",
+          "title": "AI full-resume review",
+          "body": "Scores you across five dimensions—structure, role fit, professional tone, impact, and concision—flagging each issue and showing how to fix it, like a senior recruiter reading your resume end to end."
+        }
+      }
+    },
+    "jobs": {
+      "overline": "Roles",
+      "title": "Roles we're especially good at",
+      "subtitle": "AI rewrites and reviews tune their prompts to each role—no generic, one-size-fits-all advice. Every suggestion targets the job you're aiming for.",
+      "category": {
+        "frontend": {
+          "name": "Frontend Engineer",
+          "tags": "React · Vue · TypeScript"
+        },
+        "backend": {
+          "name": "Backend Engineer",
+          "tags": "Go · Java · Node.js"
+        },
+        "product": {
+          "name": "Product Manager",
+          "tags": "User insights · Requirements · Iteration"
+        },
+        "data": {
+          "name": "Data Analyst",
+          "tags": "SQL · Python · Metrics"
+        },
+        "design": {
+          "name": "Designer",
+          "tags": "UI · UX · Interaction"
+        },
+        "marketing": {
+          "name": "Marketing / Growth",
+          "tags": "Content · Growth · Ads"
+        },
+        "ai": {
+          "name": "Algorithms / AI",
+          "tags": "ML · NLP · LLM engineering"
+        },
+        "security": {
+          "name": "Cybersecurity",
+          "tags": "Web · Red team · Binary"
+        }
+      }
+    },
+    "philosophy": {
+      "overline": "Writing approach",
+      "title": "We won't brag for you, and we won't make up your story",
+      "subtitle": "We just help you explain what you actually did, clearly.",
+      "principle": {
+        "honest": {
+          "label": "No fabrication",
+          "body": "AI never invents facts. When a number is missing, it prompts you to add one instead of making it up."
+        },
+        "deStudent": {
+          "label": "Less student-speak",
+          "body": "Swap \"participated in,\" \"studied,\" and \"familiar with\" for \"led,\" \"built end to end,\" \"streamlined,\" and \"drove.\""
+        },
+        "verbFirst": {
+          "label": "Lead with a verb",
+          "body": "Start every bullet with an action—readers want to see what you did, not what you are."
+        },
+        "results": {
+          "label": "Show results",
+          "body": "Use numbers when you have them; when you don't, show concrete impact—people reached, frequency, the change you made."
+        }
+      }
+    },
+    "pricing": {
+      "overline": "Pricing",
+      "title": "Free for now—take your time",
+      "subtitle": "Free for every new grad during launch. Paid plans will come later, but a free tier will always stay.",
+      "tier": {
+        "free": {
+          "name": "Free",
+          "price": "$0",
+          "priceUnit": "forever",
+          "description": "Just starting your job search and writing your first resume? This tier is all you need.",
+          "features": {
+            "0": "Unlimited resumes",
+            "1": "Full structured editor",
+            "2": "30 AI rewrites per month",
+            "3": "5 AI reviews per month",
+            "4": "3 PDF upload parses per month",
+            "5": "A4 PDF export"
+          },
+          "ctaLabel": "Start for free"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$9",
+          "priceUnit": "/ month",
+          "description": "Built for high-volume applications and juggling several roles at once.",
+          "features": {
+            "0": "Unlimited AI rewrites & reviews",
+            "1": "Unlimited PDF upload parsing",
+            "2": "One profile, multiple role-tailored versions",
+            "3": "Bilingual Chinese / English PDF export",
+            "4": "Priority email support"
+          },
+          "ctaLabel": "Upgrade to Pro"
+        }
+      }
+    }
+  },
+  "editor": {
+    "untitled": "Untitled resume",
+    "nav": {
+      "upload": "Upload",
+      "account": "Account"
+    },
+    "confirm": {
+      "delete": "Delete this resume? This can't be undone."
+    },
+    "header": {
+      "overline": "Edit · Resume",
+      "title": "Tell your story"
+    },
+    "trialTitle": "Free trial · {remaining} left this month",
+    "upgradeTitle": "Free quota used up · upgrade to Pro for unlimited use",
+    "delete": "Delete",
+    "addItem": "+ Add",
+    "move": {
+      "up": "Move up",
+      "down": "Move down"
+    },
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "panel": {
+      "hide": "Hide"
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "checkup": {
+      "quotaExceeded": "You've used all AI checkups this month ({used} / {limit}). Resets on the 1st.",
+      "quotaTitle": "Monthly checkups used up ({used} / {limit})",
+      "running": "Checking…",
+      "score": "Checkup · {score}",
+      "full": "Limit reached",
+      "label": "Checkup",
+      "overline": "AI checkup report",
+      "runningTitle": "Reading your resume, hang tight…",
+      "errorTitle": "Checkup failed",
+      "resultTitle": "Your resume scored across five areas",
+      "rerun": "Run again",
+      "runningHint": "DeepSeek is reviewing your resume across 5 dimensions, usually 10–20 seconds.",
+      "scoreCaption": "Overall · out of 100",
+      "issuesCount": "{n, plural, one {# suggestion} other {# suggestions}}, sorted by severity",
+      "suggestedRewrite": "Try writing it like this",
+      "dim": {
+        "structure": "Structure",
+        "jobMatch": "Job match",
+        "professionalTone": "Professional tone",
+        "outcome": "Impact",
+        "conciseness": "Conciseness",
+        "job_match": "Job match",
+        "professional_tone": "Professional tone"
+      },
+      "sev": {
+        "critical": "Needs fixing",
+        "moderate": "Could be better",
+        "suggestion": "Suggestion"
+      }
+    },
+    "match": {
+      "running": "Matching…",
+      "label": "Match JD",
+      "labelRemaining": "Match JD · {remaining} left",
+      "pro": "Match JD · Pro",
+      "overline": "Job match",
+      "inputTitle": "Paste a JD and compare",
+      "runningTitle": "Comparing the JD with your resume…",
+      "resultTitle": "Match · {score}",
+      "errorTitle": "Match failed",
+      "changeJd": "Try another JD",
+      "jdPlaceholder": "Paste the full job description here — responsibilities, requirements, and nice-to-haves.",
+      "charsNeeded": "{n} more characters to start",
+      "charsEnough": "{n} characters — that's enough",
+      "analyze": "Start analysis",
+      "runningHint": "AI is extracting JD keywords and checking your resume point by point, usually 10–20 seconds.",
+      "scoreCaption": "Match · out of 100",
+      "dim": {
+        "skills": "Skills",
+        "experience": "Experience",
+        "tone": "Tone"
+      },
+      "matched": "Matched keywords ({n})",
+      "missing": "Missing keywords ({n})",
+      "none": "(none)",
+      "suggestions": "Tailored suggestions ({n})",
+      "suggestedHighlight": "A bullet you could add"
+    },
+    "cover": {
+      "running": "Writing…",
+      "label": "Cover letter",
+      "labelRemaining": "Cover letter · {remaining} left",
+      "pro": "Cover letter · Pro",
+      "overline": "Cover letter",
+      "inputTitle": "Write a cover letter that lands",
+      "runningTitle": "AI is turning your experience into a letter…",
+      "resultTitle": "Here's the AI draft",
+      "errorTitle": "Couldn't generate the cover letter",
+      "regenerate": "Regenerate",
+      "jdLabel": "Job description (optional — tailors the letter to the role)",
+      "jdPlaceholder": "Paste the target JD here; or skip it and AI will write a general letter for your target role.",
+      "extraLabel": "Extra notes (optional)",
+      "extraPlaceholder": "e.g. \"The company is Anthropic,\" \"The hiring manager is Karen,\" \"I want to highlight my interest in AI safety\"",
+      "generate": "Generate cover letter",
+      "runningHint": "AI is weaving your most compelling experience into a 300–400 word letter. 10–20 seconds."
+    },
+    "interview": {
+      "running": "Predicting…",
+      "label": "Interview Qs",
+      "labelRemaining": "Interview Qs · {remaining} left",
+      "pro": "Interview Qs · Pro",
+      "overline": "Interview prep",
+      "inputTitle": "Predict what you'll be asked, based on your resume",
+      "runningTitle": "Working out the interviewer's questions from your resume…",
+      "resultTitle": "Prepared {n, plural, one {# question} other {# questions}} for you",
+      "errorTitle": "Interview prep failed",
+      "changeJd": "Retry with another JD",
+      "jdLabel": "Job description (optional — tailors the questions to the role)",
+      "jdPlaceholder": "Paste the target JD here; or skip it and AI will base questions on your target role.",
+      "predict": "Start prediction",
+      "runningHint": "AI is reading your resume and picking the questions worth prepping for, usually 10–20 seconds.",
+      "probe": "What it probes: {probe}",
+      "howToAnswer": "How to answer",
+      "cat": {
+        "behavioral": "Behavioral",
+        "technical": "Technical",
+        "project": "Project",
+        "fit": "Fit"
+      }
+    },
+    "export": {
+      "button": "Export PDF ▾",
+      "zhVersion": "Chinese version",
+      "enVersion": "English version",
+      "enPro": "English · Pro only"
+    },
+    "targetRole": {
+      "heading": "Target role",
+      "hint": "Tap a tag below to fill it in, or type something more specific (e.g. \"Frontend Engineer · React\"). Leave it blank for a general direction.",
+      "placeholder": "Or be more specific, e.g. \"Frontend Engineer · React\""
+    },
+    "jobs": {
+      "frontend": "Frontend Engineer",
+      "backend": "Backend Engineer",
+      "product": "Product Manager",
+      "data": "Data Analyst",
+      "design": "Designer",
+      "marketing": "Marketing / Ops",
+      "ai": "ML / AI",
+      "security": "Security"
+    },
+    "basic": {
+      "heading": "Basic info",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "headline": "Headline (one line)",
+      "headlinePlaceholder": "Frontend Engineer / Product Manager Intern ...",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "locationPlaceholder": "City",
+      "portfolio": "Portfolio / Website",
+      "githubPlaceholder": "https://github.com/your-username",
+      "linkedinPlaceholder": "https://linkedin.com/in/your-username"
+    },
+    "summary": {
+      "heading": "Summary",
+      "placeholder": "In two or three sentences, say who you are and what you're looking for."
+    },
+    "experience": {
+      "heading": "Experience",
+      "empty": "No experience yet. Start with the buttons above — education, projects, and internships all count.",
+      "untitledItem": "(Untitled)",
+      "field": {
+        "title": "Title",
+        "titlePlaceholder": "Project / School / Company name",
+        "org": "Organization",
+        "role": "Role",
+        "rolePlaceholder": "Led / Owned / Member ...",
+        "location": "Location",
+        "start": "Start",
+        "end": "End",
+        "endPlaceholder": "Present / 2025.06"
+      }
+    },
+    "expKind": {
+      "education": "Education",
+      "project": "Project",
+      "internship": "Internship / Work"
+    },
+    "skills": {
+      "heading": "Skills",
+      "addCategory": "+ Add category",
+      "empty": "e.g. Languages, frameworks, tools. One category per line.",
+      "categoryPlaceholder": "Category",
+      "addItem": "+ Add"
+    },
+    "awards": {
+      "heading": "Awards & honors",
+      "empty": "Scholarships, competition rankings, honors — add the date, title, and issuer.",
+      "titlePlaceholder": "Title (e.g. XCTF National 5th place)",
+      "issuerPlaceholder": "Issuer"
+    },
+    "certs": {
+      "heading": "Certifications",
+      "empty": "CET-6, AWS, CKA, etc. — date, name, and issuer (optional).",
+      "titlePlaceholder": "Certification name (e.g. OSCP)",
+      "issuerPlaceholder": "Issuer (optional)"
+    },
+    "languages": {
+      "heading": "Languages",
+      "empty": "e.g. English · CET-6 / IELTS 7.0; Japanese · N2. Language + level per line.",
+      "namePlaceholder": "Language (e.g. English)",
+      "levelPlaceholder": "Level (e.g. CET-6 · fluent reading & writing)"
+    },
+    "highlight": {
+      "label": "Highlights / Impact",
+      "empty": "One sentence per line — start with a verb, and bring in numbers and concrete results where you can.",
+      "genPlaceholder": "Describe what you did in plain words, and AI will expand it into 2–3 polished highlights (e.g. built a sign-up mini-app for a student club, used across 20+ events)",
+      "genTitle": "Generate highlights with AI",
+      "genEmpty": "First, write one sentence about what you did",
+      "quotaExceeded": "You've used your AI quota for this month",
+      "generating": "Generating…",
+      "generate": "Generate",
+      "rowPlaceholder": "What you led / what you built / what it achieved",
+      "removeRow": "Remove this line"
+    },
+    "rewrite": {
+      "empty": "Write a sentence first, then rewrite",
+      "quotaExceeded": "You've used your AI rewrites for this month",
+      "title": "Rewrite this line with AI",
+      "running": "Rewriting…",
+      "full": "Limit reached",
+      "label": "✨ Rewrite",
+      "original": "Original",
+      "aiRewrite": "AI rewrite",
+      "why": "Why this works better",
+      "preservedFacts": "Facts preserved",
+      "accept": "Use it",
+      "discard": "Discard"
+    },
+    "save": {
+      "idle": "Waiting for input",
+      "dirty": "Editing",
+      "saving": "Saving…",
+      "saved": "Saved · {time}",
+      "error": "Save failed: {message}"
+    },
+    "footer": {
+      "deleting": "Deleting…",
+      "delete": "Delete this resume",
+      "cloneTitle": "Duplicate this resume to tailor it for a different role",
+      "cloning": "Cloning…",
+      "clone": "Clone as a new version",
+      "saveHint": "Cmd / Ctrl + S to save now"
+    },
+    "guide": {
+      "overline": "Quick start",
+      "body": "Not sure how to phrase your experience? Write a plain sentence in the highlights area and tap <gen>✨ Generate</gen> to let AI expand it into polished bullets. When you're done, hit Checkup at the top for a score and Interview Qs to prep ahead; then pick a template under Appearance, turn on Live preview to tweak as you go, and finally export to PDF.",
+      "dismiss": "Got it"
+    },
+    "template": {
+      "overline": "Appearance",
+      "title": "Pick a template and preview the export live",
+      "hidePreview": "Hide preview",
+      "showPreview": "Live preview",
+      "orderHint": "Section order (the header always stays first; empty sections won't appear in the export)",
+      "previewNote": "Edit and preview side by side · the preview uses a light font, so a few rare characters may not show — the exported PDF is unaffected.",
+      "openFull": "Open with full fonts ↗",
+      "loadingPreview": "Loading the preview engine…",
+      "classic": {
+        "name": "Classic",
+        "desc": "Serif headings · warm terracotta accent"
+      },
+      "minimal": {
+        "name": "Minimal",
+        "desc": "Restrained black & white · ATS-friendly"
+      },
+      "modern": {
+        "name": "Modern",
+        "desc": "Color-block headings · calm blue-gray"
+      },
+      "twocol": {
+        "name": "Two-column",
+        "desc": "Info in the left column · experience on the right"
+      }
+    },
+    "section": {
+      "summary": "Summary",
+      "experience": "Experience",
+      "skills": "Skills",
+      "awards": "Awards & honors",
+      "certifications": "Certifications",
+      "languages": "Languages"
+    },
+    "share": {
+      "overline": "Share this resume",
+      "title": "Give recruiters a link, not an attachment",
+      "disabling": "Working…",
+      "disable": "Turn off sharing",
+      "copyError": "Couldn't copy — please select the link manually",
+      "expiresOn": "Expires {date}",
+      "neverExpires": "Never expires",
+      "hasPasscode": "Passcode set",
+      "removePasscode": "Remove",
+      "noPasscode": "No passcode",
+      "viewedCount": "Viewed {count, plural, one {# time} other {# times}}",
+      "lastViewedSuffix": " · last {date}",
+      "noViews": "No views yet",
+      "updateSettings": "Update settings",
+      "liveHint": "Anyone with the link can view your latest PDF; with a passcode, they'll need to enter it first. Edits sync over within about a minute.",
+      "offHint": "Turn it on to generate a read-only link — no login needed for viewers. You can set an expiry and passcode, and turn it off anytime.",
+      "generating": "Generating…",
+      "generateLink": "Generate share link",
+      "validity": "Validity",
+      "passcodeLabel": "Passcode (optional)",
+      "passcodeKeep": "Leave blank to keep it, or type to update",
+      "passcodePlaceholder": "e.g. 4–6 digits",
+      "expiry": {
+        "7": "7 days",
+        "30": "30 days",
+        "forever": "Forever"
+      }
+    },
+    "versions": {
+      "restoreConfirm": "Restoring replaces the current content; the current version is auto-saved to history first. Continue?",
+      "overline": "Version history",
+      "title": "Save a version before you make changes",
+      "count": "{n, plural, one {# snapshot} other {# snapshots}} saved",
+      "empty": "No snapshots yet — open this anytime to save one",
+      "hide": "Hide −",
+      "show": "Expand +",
+      "labelPlaceholder": "Version label (optional, e.g. \"Frontend application\")",
+      "saving": "Saving…",
+      "save": "Save as version",
+      "hint": "Once saved, all snapshots show up here. Tap Restore to roll content back to that point — the current content is auto-saved first, so you can always undo.",
+      "untitled": "Untitled snapshot",
+      "restoring": "Restoring…",
+      "restore": "Restore"
+    }
   }
 }

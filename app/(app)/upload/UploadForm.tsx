@@ -2,7 +2,10 @@
 
 import { useState, useRef, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { parseResumeText, parseResumeUpload } from "@/app/actions/upload";
+
+type Translate = ReturnType<typeof useTranslations>;
 
 type UploadState =
   | { kind: "idle" }
@@ -15,20 +18,20 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const DOCX_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-function validate(file: File): string | null {
+function validate(file: File, t: Translate): string | null {
   const name = file.name.toLowerCase();
   const isPdf = file.type === "application/pdf" || name.endsWith(".pdf");
   const isDocx = file.type === DOCX_TYPE || name.endsWith(".docx");
   const isImage =
     file.type.startsWith("image/") || /\.(png|jpe?g|webp)$/.test(name);
   if (name.endsWith(".doc") && !isDocx) {
-    return "暂不支持旧版 .doc，请另存为 .docx 或导出 PDF";
+    return t("error.legacyDoc");
   }
   if (!isPdf && !isDocx && !isImage) {
-    return "只支持 PDF、Word（.docx）和图片（png/jpg）";
+    return t("error.unsupported");
   }
   if (file.size > MAX_BYTES) {
-    return "文件超过 5 MB";
+    return t("error.tooLarge");
   }
   return null;
 }
@@ -40,6 +43,7 @@ function formatSize(bytes: number) {
 }
 
 export function UploadForm() {
+  const t = useTranslations("upload");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>({ kind: "idle" });
@@ -47,7 +51,7 @@ export function UploadForm() {
   const [mode, setMode] = useState<"file" | "paste">("file");
 
   const setFile = (file: File) => {
-    const err = validate(file);
+    const err = validate(file, t);
     if (err) {
       setState({ kind: "error", message: err, file });
       return;
@@ -74,12 +78,12 @@ export function UploadForm() {
     const file = state.file;
     if (!file) return;
 
-    setState({ kind: "running", file, stage: "正在读取文件文字…" });
+    setState({ kind: "running", file, stage: t("stage.reading") });
     // AI parse can take 15-30s; fake a stage bump halfway through for feedback
     const stageTimer = setTimeout(() => {
       setState((curr) =>
         curr.kind === "running"
-          ? { ...curr, stage: "正在让 AI 抽取结构…" }
+          ? { ...curr, stage: t("stage.extracting") }
           : curr,
       );
     }, 2500);
@@ -119,7 +123,7 @@ export function UploadForm() {
                 : "text-olive-gray hover:text-near-black")
             }
           >
-            {m === "file" ? "上传文件" : "粘贴文字"}
+            {m === "file" ? t("tab.file") : t("tab.paste")}
           </button>
         ))}
       </div>
@@ -160,10 +164,10 @@ export function UploadForm() {
               ↑
             </div>
             <p className="font-serif text-[17px] text-near-black mb-1.5">
-              把 PDF、Word 或简历照片拖到这里，或者点击选择
+              {t("dropzone.title")}
             </p>
             <p className="text-[12.5px] text-stone-gray">
-              最大 5 MB · 支持 PDF、Word（.docx）、图片（png/jpg）
+              {t("dropzone.hint")}
             </p>
           </>
         )}
@@ -174,7 +178,8 @@ export function UploadForm() {
               {state.file.name}
             </p>
             <p className="text-[12.5px] text-stone-gray">
-              {formatSize(state.file.size)} · {state.kind === "error" ? "有问题" : "已就绪"}
+              {formatSize(state.file.size)} ·{" "}
+              {state.kind === "error" ? t("fileStatus.error") : t("fileStatus.ready")}
             </p>
             {state.kind === "error" && (
               <p className="text-[13px] text-error mt-2">{state.message}</p>
@@ -191,7 +196,7 @@ export function UploadForm() {
               {state.stage}
             </p>
             <p className="text-[12.5px] text-stone-gray">
-              整个过程大约 15-30 秒，别关页面
+              {t("running.note")}
             </p>
           </div>
         )}
@@ -204,14 +209,14 @@ export function UploadForm() {
             onClick={submit}
             className="flex-1 rounded-xl bg-terracotta text-ivory py-3 text-[14px] font-medium hover:bg-coral transition"
           >
-            开始分析
+            {t("button.analyze")}
           </button>
           <button
             type="button"
             onClick={reset}
             className="rounded-xl bg-warm-sand text-charcoal-warm px-5 py-3 text-[14px] hover:bg-border-cream transition"
           >
-            换一份
+            {t("button.change")}
           </button>
         </div>
       )}
@@ -223,7 +228,7 @@ export function UploadForm() {
             onClick={reset}
             className="flex-1 rounded-xl bg-warm-sand text-charcoal-warm py-3 text-[14px] hover:bg-border-cream transition"
           >
-            换一份重试
+            {t("button.retry")}
           </button>
         </div>
       )}
@@ -234,6 +239,7 @@ export function UploadForm() {
 }
 
 function PasteImport() {
+  const t = useTranslations("upload");
   const router = useRouter();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -260,14 +266,16 @@ function PasteImport() {
         onChange={(e) => setText(e.target.value)}
         rows={12}
         disabled={busy}
-        placeholder="把简历文字整段贴进来——扫描件可以先用手机扫描 App 转成文字，或从原始文档里复制。AI 会自动抽成结构化简历。"
+        placeholder={t("paste.placeholder")}
         className="w-full rounded-2xl bg-ivory ring-1 ring-border-warm px-5 py-4 text-[13.5px] text-near-black placeholder:text-warm-silver leading-relaxed focus:outline-none focus:ring-2 focus:ring-terracotta transition resize-y"
       />
       {error && <p className="text-[13px] text-error">{error}</p>}
       <div className="flex items-center justify-between">
         <p className="text-[12px] text-stone-gray">
-          {count < 40 ? `还差 ${Math.max(0, 40 - count)} 个字开始` : `${count} 字`}
-          {busy ? " · 正在让 AI 抽取结构，约 15-30 秒" : ""}
+          {count < 40
+            ? t("paste.remaining", { count: Math.max(0, 40 - count) })
+            : t("paste.charCount", { count })}
+          {busy ? t("paste.busyNote") : ""}
         </p>
         <button
           type="button"
@@ -275,7 +283,7 @@ function PasteImport() {
           disabled={busy || count < 40}
           className="rounded-xl bg-terracotta text-ivory px-5 py-2.5 text-[14px] font-medium hover:bg-coral disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          {busy ? "结构化中…" : "结构化"}
+          {busy ? t("paste.submitting") : t("paste.submit")}
         </button>
       </div>
     </div>

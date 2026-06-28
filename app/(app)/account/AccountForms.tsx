@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   deleteAccount,
   requestEmailChange,
@@ -28,6 +29,7 @@ export function AccountForms({
 }
 
 function EmailField({ email }: { email: string }) {
+  const t = useTranslations("account");
   const [editing, setEditing] = useState(false);
   const [state, action, pending] = useActionState<AccountUpdateState, FormData>(
     requestEmailChange,
@@ -40,7 +42,7 @@ function EmailField({ email }: { email: string }) {
         htmlFor="email"
         className="block text-[12px] text-olive-gray mb-1.5 tracking-wide"
       >
-        邮箱（登录用）
+        {t("email.label")}
       </label>
       {!editing ? (
         <div className="flex items-center gap-2">
@@ -54,7 +56,7 @@ function EmailField({ email }: { email: string }) {
             onClick={() => setEditing(true)}
             className="rounded-xl bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream transition"
           >
-            更改
+            {t("email.change")}
           </button>
         </div>
       ) : (
@@ -66,7 +68,7 @@ function EmailField({ email }: { email: string }) {
               type="email"
               required
               autoComplete="email"
-              placeholder="新邮箱地址"
+              placeholder={t("email.placeholder")}
               className="flex-1 rounded-xl bg-white ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
             />
             <button
@@ -74,7 +76,7 @@ function EmailField({ email }: { email: string }) {
               disabled={pending}
               className="rounded-xl bg-terracotta text-ivory px-4 py-2 text-[13px] font-medium hover:bg-coral disabled:opacity-60 transition"
             >
-              {pending ? "发送中…" : "发确认邮件"}
+              {pending ? t("email.sending") : t("email.sendConfirm")}
             </button>
             <button
               type="button"
@@ -82,7 +84,7 @@ function EmailField({ email }: { email: string }) {
               disabled={pending}
               className="rounded-xl text-stone-gray px-2 py-2 text-[13px] hover:text-near-black disabled:opacity-60 transition"
             >
-              取消
+              {t("cancel")}
             </button>
           </div>
           <FormNotice state={state} />
@@ -90,7 +92,7 @@ function EmailField({ email }: { email: string }) {
       )}
       {!editing && (
         <p className="mt-1.5 text-[11.5px] text-stone-gray">
-          更改需要在新邮箱里点确认链接才会生效。
+          {t("email.hint")}
         </p>
       )}
     </div>
@@ -98,6 +100,7 @@ function EmailField({ email }: { email: string }) {
 }
 
 function NameField({ initial }: { initial: string }) {
+  const t = useTranslations("account");
   const [state, action, pending] = useActionState<AccountUpdateState, FormData>(
     updateDisplayName,
     null,
@@ -109,14 +112,14 @@ function NameField({ initial }: { initial: string }) {
         htmlFor="displayName"
         className="block text-[12px] text-olive-gray mb-1.5 tracking-wide"
       >
-        显示名
+        {t("name.label")}
       </label>
       <div className="flex items-center gap-2">
         <input
           id="displayName"
           name="displayName"
           defaultValue={initial}
-          placeholder="例如 夏禾壮"
+          placeholder={t("name.placeholder")}
           maxLength={120}
           className="flex-1 rounded-xl bg-white ring-1 ring-border-warm px-3 py-2 text-[14px] text-near-black placeholder:text-warm-silver focus:outline-none focus:ring-2 focus:ring-terracotta transition"
         />
@@ -125,7 +128,7 @@ function NameField({ initial }: { initial: string }) {
           disabled={pending}
           className="rounded-xl bg-terracotta text-ivory px-4 py-2 text-[13px] font-medium hover:bg-coral disabled:opacity-60 transition"
         >
-          {pending ? "保存中…" : "保存"}
+          {pending ? t("name.saving") : t("name.save")}
         </button>
       </div>
       <FormNotice state={state} />
@@ -134,6 +137,7 @@ function NameField({ initial }: { initial: string }) {
 }
 
 function LocaleField({ initial }: { initial: string }) {
+  const t = useTranslations("account");
   const [state, action, pending] = useActionState<AccountUpdateState, FormData>(
     updateLocale,
     null,
@@ -145,7 +149,7 @@ function LocaleField({ initial }: { initial: string }) {
         htmlFor="locale"
         className="block text-[12px] text-olive-gray mb-1.5 tracking-wide"
       >
-        界面语言
+        {t("locale.label")}
       </label>
       <div className="flex items-center gap-2">
         <select
@@ -163,7 +167,7 @@ function LocaleField({ initial }: { initial: string }) {
           disabled={pending}
           className="rounded-xl bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream disabled:opacity-60 transition"
         >
-          {pending ? "切换中…" : "切换"}
+          {pending ? t("locale.switching") : t("locale.switch")}
         </button>
       </div>
       <FormNotice state={state} />
@@ -172,6 +176,7 @@ function LocaleField({ initial }: { initial: string }) {
 }
 
 export function DataAndDanger({ email }: { email: string }) {
+  const t = useTranslations("account");
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState<AccountUpdateState, FormData>(
     deleteAccount,
@@ -180,12 +185,12 @@ export function DataAndDanger({ email }: { email: string }) {
 
   return (
     <section className="mt-5 rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-6">
-      <p className="overline mb-1.5">数据与账号</p>
+      <p className="overline mb-1.5">{t("data.overline")}</p>
       <p className="font-serif text-[16px] text-near-black mb-1">
-        导出与删除
+        {t("data.title")}
       </p>
       <p className="text-[12.5px] text-olive-gray mb-4">
-        随时把你的全部数据下载成一个 JSON 文件，或永久删除账号。
+        {t("data.desc")}
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -193,7 +198,7 @@ export function DataAndDanger({ email }: { email: string }) {
           href="/api/account/export"
           className="rounded-lg bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream transition"
         >
-          导出我的数据
+          {t("data.export")}
         </a>
         {!confirming && (
           <button
@@ -201,7 +206,7 @@ export function DataAndDanger({ email }: { email: string }) {
             onClick={() => setConfirming(true)}
             className="rounded-lg px-4 py-2 text-[13px] text-error hover:bg-error/10 transition"
           >
-            删除账号
+            {t("data.delete")}
           </button>
         )}
       </div>
@@ -210,11 +215,17 @@ export function DataAndDanger({ email }: { email: string }) {
         <form action={action} className="mt-5 space-y-3">
           <div className="rounded-2xl bg-error/5 ring-1 ring-error/20 px-5 py-4">
             <p className="text-[13px] text-near-black leading-relaxed mb-3">
-              这会<strong>永久删除</strong>你的全部简历、版本历史、AI 记录和订单，
-              并取消正在进行的订阅。<strong>无法恢复。</strong>
+              {t.rich("data.deleteWarning", {
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
             </p>
             <label className="block text-[12px] text-olive-gray mb-1.5 tracking-wide">
-              输入你的邮箱 <span className="text-near-black">{email}</span> 以确认
+              {t.rich("data.confirmLabel", {
+                email,
+                email_node: (chunks) => (
+                  <span className="text-near-black">{chunks}</span>
+                ),
+              })}
             </label>
             <input
               name="confirmEmail"
@@ -228,7 +239,7 @@ export function DataAndDanger({ email }: { email: string }) {
                 disabled={pending}
                 className="rounded-lg bg-error text-ivory px-4 py-2 text-[13px] font-medium hover:opacity-90 disabled:opacity-60 transition"
               >
-                {pending ? "删除中…" : "我确认，永久删除"}
+                {pending ? t("data.deleting") : t("data.confirmDelete")}
               </button>
               <button
                 type="button"
@@ -236,7 +247,7 @@ export function DataAndDanger({ email }: { email: string }) {
                 disabled={pending}
                 className="rounded-lg bg-warm-sand text-charcoal-warm px-4 py-2 text-[13px] hover:bg-border-cream disabled:opacity-60 transition"
               >
-                取消
+                {t("cancel")}
               </button>
             </div>
             <FormNotice state={state} />

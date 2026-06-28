@@ -21,5 +21,780 @@
     "resendIn": "{seconds}s 后可重发",
     "resending": "重新发送中…",
     "checkSpam": "也记得看看垃圾邮件箱"
+  },
+  "dashboard": {
+    "overline": "Dashboard · 起点",
+    "greeting": "{name}，欢迎回来。",
+    "intro": "先建一份简历开始吧——你写好基本信息和经历，AI 会帮你把它变成一份看起来像样的 CV。",
+    "myResumes": "我的简历",
+    "uploadPdf": "上传 PDF",
+    "newResume": "新建简历",
+    "empty": {
+      "title": "还没有开始。",
+      "desc": "从示例开始最快——我们预填了一份完整的应届生简历，照着改就行；已有简历就上传，AI 帮你结构化；也可以从空白开始。",
+      "fromExample": "从示例开始",
+      "uploadFile": "上传 PDF / Word",
+      "fromBlank": "从空白开始",
+      "step1": {
+        "title": "填经历",
+        "desc": "用大白话写，✨ 一键扩成专业亮点"
+      },
+      "step2": {
+        "title": "做体检",
+        "desc": "AI 按 5 个维度打分，照着改"
+      },
+      "step3": {
+        "title": "导出",
+        "desc": "选模板、实时预览，中英双语 PDF"
+      }
+    },
+    "usage": {
+      "title": "本月 AI 用量",
+      "proUnlimited": "Pro · 不限次",
+      "rewrite": "改写",
+      "checkup": "体检",
+      "upload": "解析",
+      "unlimited": "无限次",
+      "usedUp": "本月已用完，下月 1 号重置",
+      "remaining": "本月还剩 {count} 次"
+    },
+    "account": {
+      "label": "当前账户",
+      "planLocale": "套餐：{plan} · 语言：{locale}",
+      "manage": "管理订阅",
+      "upgrade": "升级到 Pro"
+    },
+    "sort": {
+      "updated": "最近修改",
+      "created": "最近创建",
+      "name": "按名称"
+    },
+    "search": {
+      "icon": "搜",
+      "placeholder": "搜索名称、定位或目标岗位",
+      "noMatch": "没有匹配「{query}」的简历。"
+    },
+    "row": {
+      "untitled": "未命名简历",
+      "noHeadline": "还没有写个人定位",
+      "targetRoleTitle": "目标岗位",
+      "deleting": "删除中…",
+      "confirmDelete": "确认删除",
+      "cancel": "取消",
+      "cloneTitle": "克隆成新版本",
+      "clone": "克隆",
+      "pdfTitle": "导出 PDF",
+      "deleteTitle": "删除",
+      "delete": "删除"
+    },
+    "badge": {
+      "checkupTitle": "上次体检分数",
+      "checkup": "体检"
+    }
+  },
+  "account": {
+    "metaTitle": "账户",
+    "backToDashboard": "返回 Dashboard",
+    "overline": "账户",
+    "title": "账户设置",
+    "intro": "这些是你的基本信息。邮箱由 Supabase 管理，改邮箱需要重新走 magic link 流程。",
+    "subscription": {
+      "overline": "订阅",
+      "proTitle": "你在 Pro 套餐",
+      "freeTitle": "免费套餐",
+      "proDesc": "不限次 AI 改写 / 体检 / PDF 解析 已解锁。",
+      "freeDesc": "每月 30 次改写 / 5 次体检 / 3 次解析。升级解锁不限次。",
+      "manage": "管理订阅",
+      "upgrade": "升级到 Pro",
+      "recentOrders": "最近订单"
+    },
+    "order": {
+      "monthly": "Pro 月度",
+      "oneTime": "单次"
+    },
+    "session": {
+      "overline": "会话",
+      "title": "登录与退出",
+      "desc": "退出后需要再次通过邮箱 magic link 登录。",
+      "signOutCurrent": "退出登录（当前设备）"
+    },
+    "status": {
+      "paid": "已支付",
+      "pending": "处理中",
+      "failed": "失败",
+      "refunded": "已退款"
+    },
+    "cancel": "取消",
+    "email": {
+      "label": "邮箱（登录用）",
+      "change": "更改",
+      "placeholder": "新邮箱地址",
+      "sending": "发送中…",
+      "sendConfirm": "发确认邮件",
+      "hint": "更改需要在新邮箱里点确认链接才会生效。"
+    },
+    "name": {
+      "label": "显示名",
+      "placeholder": "例如 夏禾壮",
+      "saving": "保存中…",
+      "save": "保存"
+    },
+    "locale": {
+      "label": "界面语言",
+      "switching": "切换中…",
+      "switch": "切换"
+    },
+    "data": {
+      "overline": "数据与账号",
+      "title": "导出与删除",
+      "desc": "随时把你的全部数据下载成一个 JSON 文件，或永久删除账号。",
+      "export": "导出我的数据",
+      "delete": "删除账号",
+      "deleteWarning": "这会<strong>永久删除</strong>你的全部简历、版本历史、AI 记录和订单，并取消正在进行的订阅。<strong>无法恢复。</strong>",
+      "confirmLabel": "输入你的邮箱 <email_node>{email}</email_node> 以确认",
+      "deleting": "删除中…",
+      "confirmDelete": "我确认，永久删除"
+    },
+    "mfa": {
+      "codeWrong": "验证码不对，再试一次。",
+      "overline": "两步验证（2FA）",
+      "title": "用身份验证器 App 多加一道锁",
+      "desc": "开启后，登录时除了邮箱链接，还需要输入验证器里的 6 位动态码。",
+      "enable": "开启",
+      "disabling": "关闭中…",
+      "disable": "关闭",
+      "enabled": "两步验证已开启。",
+      "enrollDesc": "用身份验证器 App（Google Authenticator、1Password、Authy 等）扫描二维码，或手动输入密钥，然后填入它生成的 6 位码。",
+      "qrAlt": "两步验证二维码",
+      "manualKey": "手动密钥",
+      "codePlaceholder": "6 位动态码",
+      "verifying": "验证中…",
+      "confirmEnable": "确认开启"
+    },
+    "sessionActions": {
+      "failed": "操作失败，请稍后再试。",
+      "othersDone": "已退出其他所有设备，当前设备保持登录。",
+      "desc": "在公共电脑上登录过、或怀疑账号被别人登录，可以一键把其它设备踢下线。",
+      "processing": "处理中…",
+      "signOutOthers": "退出其他设备",
+      "signOutAll": "退出所有设备"
+    }
+  },
+  "upload": {
+    "metaTitle": "上传简历",
+    "backToDashboard": "返回 Dashboard",
+    "overline": "从现有简历开始",
+    "heading": "把你手里那份交给 AI，几秒钟把它结构化",
+    "intro": "上传 PDF、Word，或直接拍张简历照片——AI 会把里面的教育、项目、实习、技能、奖项全部抽取出来，填进编辑器里。之后你可以直接改写、体检、导出。",
+    "support": {
+      "title": "支持说明",
+      "line1": "· 支持 PDF、Word（.docx）和图片（png/jpg），不超过 5 MB",
+      "line2": "· 文字版 PDF / Word 直接抽取；简历照片或截图走 AI 识别（OCR）",
+      "line3": "· 扫描成 PDF 的简历抽不出文字——截图上传，或切到「粘贴文字」",
+      "line4": "· 旧版 .doc 请先另存为 .docx 或导出 PDF",
+      "line5": "· 中英文都行；内容越接近简历格式，抽取越准",
+      "line6": "· 我们不保留原文件，只保存结构化文字"
+    },
+    "tab": {
+      "file": "上传文件",
+      "paste": "粘贴文字"
+    },
+    "dropzone": {
+      "title": "把 PDF、Word 或简历照片拖到这里，或者点击选择",
+      "hint": "最大 5 MB · 支持 PDF、Word（.docx）、图片（png/jpg）"
+    },
+    "fileStatus": {
+      "ready": "已就绪",
+      "error": "有问题"
+    },
+    "running": {
+      "note": "整个过程大约 15-30 秒，别关页面"
+    },
+    "stage": {
+      "reading": "正在读取文件文字…",
+      "extracting": "正在让 AI 抽取结构…"
+    },
+    "button": {
+      "analyze": "开始分析",
+      "change": "换一份",
+      "retry": "换一份重试"
+    },
+    "error": {
+      "legacyDoc": "暂不支持旧版 .doc，请另存为 .docx 或导出 PDF",
+      "unsupported": "只支持 PDF、Word（.docx）和图片（png/jpg）",
+      "tooLarge": "文件超过 5 MB"
+    },
+    "paste": {
+      "placeholder": "把简历文字整段贴进来——扫描件可以先用手机扫描 App 转成文字，或从原始文档里复制。AI 会自动抽成结构化简历。",
+      "remaining": "还差 {count} 个字开始",
+      "charCount": "{count} 字",
+      "busyNote": " · 正在让 AI 抽取结构，约 15-30 秒",
+      "submit": "结构化",
+      "submitting": "结构化中…"
+    }
+  },
+  "billing": {
+    "alreadyPro": {
+      "overline": "已是专业版",
+      "title": "你已经是 Pro 用户",
+      "desc": "不限次 AI 改写 / 体检 / PDF 解析 都已解锁。"
+    },
+    "backToDashboard": "回到 Dashboard",
+    "overline": "订阅 · {plan}",
+    "title": "升级到 FirstCV {plan}",
+    "intro": "点击下面的按钮会跳转到 Stripe 结账页。付完回到这里你会看到确认。",
+    "feature": {
+      "aiUnlimited": "· 不限次 AI 改写 / 体检",
+      "pdfUnlimited": "· 不限次 PDF 上传解析",
+      "multiVersion": "· 一份内容 · 多岗位版本（克隆已支持）",
+      "prioritySupport": "· 优先问题反馈"
+    },
+    "canceledNotice": "上次结账被取消了。随时可以重新开始。",
+    "goToCheckout": "前往结账",
+    "notNow": "暂不升级",
+    "accountFooter": "账户 {email} · 结账由 Stripe 处理，我们不接触你的卡号。",
+    "success": {
+      "overlineDone": "升级完成",
+      "overlinePending": "付款处理中",
+      "titleDone": "谢谢你支持 FirstCV",
+      "titlePending": "付款已提交，正在等确认",
+      "descDone": "Pro 版功能已解锁——不限次 AI 改写、体检和上传解析。现在可以把你手里的每一份简历都打磨到位。",
+      "descPending": "Stripe 刚完成结账，我们正在通过 webhook 接收确认。一般几秒钟内账户就会升级，如果超过一分钟还没变化，联系我们。",
+      "refreshStatus": "刷新状态"
+    }
+  },
+  "mfa": {
+    "metaTitle": "两步验证",
+    "overline": "两步验证",
+    "title": "再验证一下身份",
+    "description": "你开启了两步验证。打开身份验证器 App，输入当前的 6 位动态码。",
+    "placeholder": "6 位动态码",
+    "error": {
+      "invalid": "验证码不对，再试一次。"
+    },
+    "button": {
+      "verifying": "验证中…",
+      "verify": "验证并进入"
+    }
+  },
+  "share": {
+    "expired": {
+      "title": "链接已失效",
+      "desc": "这个分享链接已关闭或已过期。如果你需要查看，请向分享者重新索取。"
+    },
+    "gate": {
+      "overline": "受保护的分享",
+      "title": "需要访问码",
+      "desc": "分享者给这份简历设置了访问码，请输入后查看。",
+      "placeholder": "访问码",
+      "error": "访问码不正确，再试一次。",
+      "submit": "查看简历"
+    },
+    "untitled": "一份简历",
+    "header": {
+      "overline": "FirstCV · 分享的简历",
+      "openNewTab": "在新标签打开"
+    },
+    "iframeTitle": "{name} · 简历 PDF"
+  },
+  "landing": {
+    "nav": {
+      "brandNote": "札记",
+      "product": "产品",
+      "jobs": "岗位方向",
+      "philosophy": "写作理念",
+      "pricing": "定价",
+      "login": "登录",
+      "ctaShort": "开始",
+      "ctaLong": "开始写第一份"
+    },
+    "hero": {
+      "overline": "写给刚进入职场的你",
+      "title": "一份像样的简历，<br></br>从说清楚你做过什么<br></br>开始。",
+      "description": "我们不是简历模板工具，也不是花哨的 AI 写手。<br></br>我们帮你把课程项目、毕业设计、校园经历里的那些「真正做过的事」，<br></br>用职业语言说清楚——让别人愿意约你聊一聊。",
+      "ctaPrimary": "开始写我的第一份简历",
+      "ctaSecondary": "我已经有一份，帮我改一改",
+      "badgeFree": "免费开始",
+      "badgeTime": "10 分钟完成首版",
+      "badgeNoCard": "无需信用卡",
+      "art": {
+        "name": "李思远",
+        "role": "应届本科 · 前端开发",
+        "projectLabel": "项目经历",
+        "projectName": "校园二手交易平台",
+        "projectBody": "独立设计并实现商品发布、搜索与聊天模块，支撑校内日活 800+ 用户。",
+        "skillsLabel": "技能栈",
+        "noteTitle": "AI 帮你改写",
+        "noteSub": "去学生气 · 动作词 · 成果"
+      }
+    },
+    "footer": {
+      "brandNote": "札记",
+      "rights": "© {year} 给第一次写简历的人。",
+      "product": "产品",
+      "pricing": "定价",
+      "philosophy": "写作理念",
+      "contact": "联系我们"
+    },
+    "product": {
+      "overline": "我们做什么",
+      "title": "FirstCV 只做三件事",
+      "subtitle": "不是简历模板库，不是自由生成器，不替你讲故事——我们只帮你把经历说清楚。",
+      "feature": {
+        "write": {
+          "label": "写",
+          "title": "结构化编辑器",
+          "body": "按教育 / 项目 / 实习分段，填空起步。基本信息、经历、技能、奖项、证书一次搞定；每一次修改自动保存。"
+        },
+        "rewrite": {
+          "label": "改",
+          "title": "AI 逐句改写",
+          "body": "选一条口水话亮点，AI 在 5 秒内改成带动词、带数字的职业表达。每一次改写都告诉你为什么，以及保留了哪些原始事实。"
+        },
+        "review": {
+          "label": "审",
+          "title": "AI 全局体检",
+          "body": "按结构 / 岗位匹配 / 专业语气 / 产出 / 简洁五个维度打分，逐条指出问题并给出修改方向——像一位资深 HR 为你读完简历。"
+        }
+      }
+    },
+    "jobs": {
+      "overline": "岗位方向",
+      "title": "我们尤其擅长这些方向",
+      "subtitle": "AI 改写和体检按岗位调节提示词，不写「通用」风格——每一条建议都针对你想去的位置。",
+      "category": {
+        "frontend": {
+          "name": "前端工程师",
+          "tags": "React · Vue · TypeScript"
+        },
+        "backend": {
+          "name": "后端工程师",
+          "tags": "Go · Java · Node.js"
+        },
+        "product": {
+          "name": "产品经理",
+          "tags": "用户洞察 · 需求 · 迭代"
+        },
+        "data": {
+          "name": "数据分析",
+          "tags": "SQL · Python · 指标"
+        },
+        "design": {
+          "name": "设计师",
+          "tags": "UI · UX · 交互"
+        },
+        "marketing": {
+          "name": "市场 / 运营",
+          "tags": "内容 · 增长 · 投放"
+        },
+        "ai": {
+          "name": "算法 / AI",
+          "tags": "ML · NLP · LLM 工程"
+        },
+        "security": {
+          "name": "网络安全",
+          "tags": "Web · 红队 · 二进制"
+        }
+      }
+    },
+    "philosophy": {
+      "overline": "写作理念",
+      "title": "我们不替你吹牛，也不替你讲故事",
+      "subtitle": "我们只帮你把真正做过的事说清楚。",
+      "principle": {
+        "honest": {
+          "label": "不捏造",
+          "body": "AI 绝不虚构事实；缺少数字时提示你补充，不替你编一个。"
+        },
+        "deStudent": {
+          "label": "去学生气",
+          "body": "把「参加了」「学习了」「了解了」换成「主导」「独立完成」「梳理」「推动」。"
+        },
+        "verbFirst": {
+          "label": "用动词开头",
+          "body": "简历的每一条都以动作开头——读者想看你做了什么，不是你是什么。"
+        },
+        "results": {
+          "label": "带结果",
+          "body": "有数字写数字，没数字写具体影响——人数、频率、带来的改变。"
+        }
+      }
+    },
+    "pricing": {
+      "overline": "价格",
+      "title": "现在免费，你慢慢用",
+      "subtitle": "上线初期免费给所有应届生使用。后面会出付费版，但永远保留免费档。",
+      "tier": {
+        "free": {
+          "name": "免费",
+          "price": "¥0",
+          "priceUnit": "一直",
+          "description": "刚找工作、写第一份简历，这一档够用了。",
+          "features": {
+            "0": "无限份数的简历",
+            "1": "完整结构化编辑器",
+            "2": "每月 30 次 AI 改写",
+            "3": "每月 5 次 AI 体检",
+            "4": "每月 3 次 PDF 上传解析",
+            "5": "A4 PDF 导出"
+          },
+          "ctaLabel": "开始免费使用"
+        },
+        "pro": {
+          "name": "专业版",
+          "price": "$9",
+          "priceUnit": "/ 月",
+          "description": "针对投递密度高、多岗位并行的求职场景。",
+          "features": {
+            "0": "不限次 AI 改写 / 体检",
+            "1": "不限次 PDF 上传解析",
+            "2": "一份内容 · 多岗位版本",
+            "3": "中文 / 英文双语 PDF 导出",
+            "4": "优先邮件支持"
+          },
+          "ctaLabel": "升级到 Pro"
+        }
+      }
+    }
+  },
+  "editor": {
+    "untitled": "未命名简历",
+    "nav": {
+      "upload": "上传",
+      "account": "账户"
+    },
+    "confirm": {
+      "delete": "确认删除这份简历吗？无法恢复。"
+    },
+    "header": {
+      "overline": "编辑 · 简历",
+      "title": "写下你的经历"
+    },
+    "trialTitle": "免费试用 · 本月还剩 {remaining} 次",
+    "upgradeTitle": "免费额度已用完 · 点击升级 Pro 不限次",
+    "delete": "删除",
+    "addItem": "+ 新增一条",
+    "move": {
+      "up": "上移",
+      "down": "下移"
+    },
+    "expand": "展开",
+    "collapse": "收起",
+    "panel": {
+      "hide": "收起"
+    },
+    "copy": "复制",
+    "copied": "已复制",
+    "checkup": {
+      "quotaExceeded": "本月 AI 体检已用完（{used} / {limit}）。下月 1 号重置。",
+      "quotaTitle": "本月体检已用完（{used} / {limit}）",
+      "running": "体检中…",
+      "score": "体检 · {score} 分",
+      "full": "本月已满",
+      "label": "体检",
+      "overline": "AI 体检报告",
+      "runningTitle": "正在读你的简历，别走开…",
+      "errorTitle": "体检失败",
+      "resultTitle": "这份简历的五项打分",
+      "rerun": "重新体检",
+      "runningHint": "DeepSeek 正在按 5 个维度通读你的简历，一般 10-20 秒。",
+      "scoreCaption": "总分 · 满分 100",
+      "issuesCount": "共 {n} 条建议（按严重度排序）",
+      "suggestedRewrite": "可以这样写",
+      "dim": {
+        "structure": "结构",
+        "jobMatch": "岗位匹配",
+        "professionalTone": "专业语气",
+        "outcome": "产出描述",
+        "conciseness": "简洁度",
+        "job_match": "岗位匹配",
+        "professional_tone": "专业语气"
+      },
+      "sev": {
+        "critical": "需要修改",
+        "moderate": "可以更好",
+        "suggestion": "建议"
+      }
+    },
+    "match": {
+      "running": "匹配中…",
+      "label": "匹配 JD",
+      "labelRemaining": "匹配 JD · 剩 {remaining}",
+      "pro": "匹配 JD · Pro",
+      "overline": "岗位匹配",
+      "inputTitle": "贴一段 JD，对比一下",
+      "runningTitle": "正在比对 JD 和简历…",
+      "resultTitle": "匹配度 · {score} 分",
+      "errorTitle": "匹配失败",
+      "changeJd": "换一份 JD",
+      "jdPlaceholder": "把目标岗位的职位描述整段粘进来——职责、要求、加分项都带上。",
+      "charsNeeded": "还差 {n} 个字开始分析",
+      "charsEnough": "{n} 字，够了",
+      "analyze": "开始分析",
+      "runningHint": "AI 正在抽取 JD 关键词、逐项核对简历，一般 10-20 秒。",
+      "scoreCaption": "匹配度 · 满分 100",
+      "dim": {
+        "skills": "技能",
+        "experience": "经历",
+        "tone": "语气"
+      },
+      "matched": "命中关键词（{n}）",
+      "missing": "缺失关键词（{n}）",
+      "none": "（无）",
+      "suggestions": "针对性建议（{n}）",
+      "suggestedHighlight": "可以加进经历的一条"
+    },
+    "cover": {
+      "running": "写信中…",
+      "label": "求职信",
+      "labelRemaining": "求职信 · 剩 {remaining}",
+      "pro": "求职信 · Pro",
+      "overline": "求职信",
+      "inputTitle": "写一封打动 HR 的求职信",
+      "runningTitle": "AI 正在把你的经历变成一封信…",
+      "resultTitle": "这是 AI 写的版本",
+      "errorTitle": "求职信生成失败",
+      "regenerate": "再生成",
+      "jdLabel": "岗位描述（可选，贴了信会更贴岗位）",
+      "jdPlaceholder": "把目标岗位的 JD 粘进来；不贴也行，AI 会按你的「目标岗位」写通用信。",
+      "extraLabel": "补充说明（可选）",
+      "extraPlaceholder": "例如「公司叫 Anthropic」「招聘经理叫 Karen」「我想强调我对 AI 安全的兴趣」",
+      "generate": "生成求职信",
+      "runningHint": "AI 正在综合简历里最打动人的经历，组织成 300-400 字的信。10-20 秒。"
+    },
+    "interview": {
+      "running": "预测中…",
+      "label": "面试题",
+      "labelRemaining": "面试题 · 剩 {remaining}",
+      "pro": "面试题 · Pro",
+      "overline": "面试题预测",
+      "inputTitle": "根据你的简历，预测会被问什么",
+      "runningTitle": "正在按简历推演面试官的问题…",
+      "resultTitle": "为你准备了 {n} 个问题",
+      "errorTitle": "面试预测失败",
+      "changeJd": "换个 JD 重测",
+      "jdLabel": "岗位描述（可选，贴了问题更贴岗位）",
+      "jdPlaceholder": "把目标岗位 JD 粘进来；不贴也行，AI 会按你的「目标岗位」出题。",
+      "predict": "开始预测",
+      "runningHint": "AI 正在通读简历、挑出最该准备的问题，一般 10-20 秒。",
+      "probe": "考察：{probe}",
+      "howToAnswer": "怎么答",
+      "cat": {
+        "behavioral": "行为",
+        "technical": "技术",
+        "project": "项目",
+        "fit": "匹配"
+      }
+    },
+    "export": {
+      "button": "导出 PDF ▾",
+      "zhVersion": "中文版",
+      "enVersion": "English version",
+      "enPro": "English · Pro 专属"
+    },
+    "targetRole": {
+      "heading": "目标岗位",
+      "hint": "点下面的标签直接填入，或者在输入框里写得更具体（例如「前端工程师 · React 方向」）。留空会按「通用」方向写。",
+      "placeholder": "或者写得更具体，例如「前端工程师 · React 方向」"
+    },
+    "jobs": {
+      "frontend": "前端工程师",
+      "backend": "后端工程师",
+      "product": "产品经理",
+      "data": "数据分析",
+      "design": "设计师",
+      "marketing": "市场 / 运营",
+      "ai": "算法 / AI",
+      "security": "网络安全"
+    },
+    "basic": {
+      "heading": "基本信息",
+      "name": "姓名",
+      "namePlaceholder": "你的名字",
+      "headline": "职业定位（一句话）",
+      "headlinePlaceholder": "前端工程师 / 产品经理实习生 ...",
+      "email": "邮箱",
+      "phone": "手机",
+      "location": "所在地",
+      "locationPlaceholder": "城市",
+      "portfolio": "作品集 / 主页",
+      "githubPlaceholder": "https://github.com/你的用户名",
+      "linkedinPlaceholder": "https://linkedin.com/in/你的用户名"
+    },
+    "summary": {
+      "heading": "个人简介",
+      "placeholder": "两三句话写下你是谁、想找什么工作。"
+    },
+    "experience": {
+      "heading": "经历",
+      "empty": "还没有添加经历。从上面的按钮开始——教育、项目、实习都可以。",
+      "untitledItem": "（未命名）",
+      "field": {
+        "title": "标题",
+        "titlePlaceholder": "项目 / 学校 / 公司名称",
+        "org": "组织 / 机构",
+        "role": "角色",
+        "rolePlaceholder": "主导 / 负责 / 成员 ...",
+        "location": "地点",
+        "start": "开始",
+        "end": "结束",
+        "endPlaceholder": "至今 / 2025.06"
+      }
+    },
+    "expKind": {
+      "education": "教育经历",
+      "project": "项目经历",
+      "internship": "实习 / 工作"
+    },
+    "skills": {
+      "heading": "技能",
+      "addCategory": "+ 新增类别",
+      "empty": "例如：编程语言、框架、工具。每类一行。",
+      "categoryPlaceholder": "类别",
+      "addItem": "+ 添加"
+    },
+    "awards": {
+      "heading": "获奖荣誉",
+      "empty": "奖学金、比赛名次、荣誉称号——写上时间、标题和颁发机构。",
+      "titlePlaceholder": "标题（如 XCTF 全国第 5 名）",
+      "issuerPlaceholder": "颁发机构"
+    },
+    "certs": {
+      "heading": "证书",
+      "empty": "CET-6、AWS、CKA 等——时间、名称、颁发机构（可选）。",
+      "titlePlaceholder": "证书名称（如 OSCP）",
+      "issuerPlaceholder": "颁发机构（可留空）"
+    },
+    "languages": {
+      "heading": "语言能力",
+      "empty": "例如：英语 · CET-6 / 雅思 7.0；日语 · N2。语言 + 水平各一行。",
+      "namePlaceholder": "语言（如 英语）",
+      "levelPlaceholder": "水平（如 CET-6 · 流利读写）"
+    },
+    "highlight": {
+      "label": "亮点 / 产出",
+      "empty": "每一条写一句话——用动词开头，尽量带上数字和具体结果。",
+      "genPlaceholder": "用大白话写一句你做了什么，AI 帮你扩成 2-3 条专业亮点（例：给社团做了个报名小程序，二十多个活动用过）",
+      "genTitle": "AI 生成亮点",
+      "genEmpty": "先用一句话写下你做了什么",
+      "quotaExceeded": "本月 AI 额度已用完",
+      "generating": "生成中…",
+      "generate": "生成",
+      "rowPlaceholder": "主导了什么 / 做出了什么 / 带来了什么结果",
+      "removeRow": "删除这一条"
+    },
+    "rewrite": {
+      "empty": "先写一句再改写",
+      "quotaExceeded": "本月 AI 改写已用完",
+      "title": "AI 改写这一条",
+      "running": "改写中…",
+      "full": "已满",
+      "label": "✨ 改写",
+      "original": "原文",
+      "aiRewrite": "AI 改写",
+      "why": "为什么这样改",
+      "preservedFacts": "保留的事实",
+      "accept": "采用",
+      "discard": "放弃"
+    },
+    "save": {
+      "idle": "等待输入",
+      "dirty": "编辑中",
+      "saving": "保存中…",
+      "saved": "已保存 · {time}",
+      "error": "保存失败：{message}"
+    },
+    "footer": {
+      "deleting": "删除中…",
+      "delete": "删除这份简历",
+      "cloneTitle": "基于这份内容复制一份，用来针对不同岗位改写",
+      "cloning": "克隆中…",
+      "clone": "克隆成新版本",
+      "saveHint": "Cmd / Ctrl + S 立即保存"
+    },
+    "guide": {
+      "overline": "新手提示",
+      "body": "不知道经历怎么写？在亮点区用大白话写一句，点 <gen>✨ 生成</gen> 让 AI 扩成专业亮点；写完点顶部「体检」看评分、「面试题」提前准备；在下面「外观」里选模板、开「实时预览」边改边看，最后导出 PDF。",
+      "dismiss": "知道了"
+    },
+    "template": {
+      "overline": "外观",
+      "title": "选一个模板，实时看导出效果",
+      "hidePreview": "收起预览",
+      "showPreview": "实时预览",
+      "orderHint": "模块顺序（标题区始终在最前；空模块不会出现在导出里）",
+      "previewNote": "边改边看 · 预览用轻量字体，极少数生僻字可能不显示，导出 PDF 不受影响。",
+      "openFull": "用完整字体打开 ↗",
+      "loadingPreview": "正在加载预览引擎…",
+      "classic": {
+        "name": "经典",
+        "desc": "衬线标题 · 暖橙强调"
+      },
+      "minimal": {
+        "name": "极简",
+        "desc": "黑白克制 · ATS 友好"
+      },
+      "modern": {
+        "name": "现代",
+        "desc": "色块标题 · 沉稳蓝灰"
+      },
+      "twocol": {
+        "name": "双栏",
+        "desc": "左栏信息 · 右栏经历"
+      }
+    },
+    "section": {
+      "summary": "个人简介",
+      "experience": "经历",
+      "skills": "技能",
+      "awards": "获奖荣誉",
+      "certifications": "证书",
+      "languages": "语言能力"
+    },
+    "share": {
+      "overline": "分享这份简历",
+      "title": "给 HR 一个链接，而不是一份附件",
+      "disabling": "处理中…",
+      "disable": "关闭分享",
+      "copyError": "复制失败，请手动选中链接",
+      "expiresOn": "{date} 过期",
+      "neverExpires": "永久有效",
+      "hasPasscode": "已设访问码",
+      "removePasscode": "移除",
+      "noPasscode": "无访问码",
+      "viewedCount": "被查看 {count} 次",
+      "lastViewedSuffix": " · 最近 {date}",
+      "noViews": "还没有人查看",
+      "updateSettings": "更新设置",
+      "liveHint": "拿到链接的人能查看你最新版本的 PDF；设了访问码则需先输入。编辑会在约 1 分钟内同步过去。",
+      "offHint": "开启后生成一个只读链接，对方不需要登录。可以设过期时间和访问码，随时关闭。",
+      "generating": "生成中…",
+      "generateLink": "生成分享链接",
+      "validity": "有效期",
+      "passcodeLabel": "访问码（可选）",
+      "passcodeKeep": "留空保持不变，输入则更新",
+      "passcodePlaceholder": "例如 4-6 位数字",
+      "expiry": {
+        "7": "7 天",
+        "30": "30 天",
+        "forever": "永久"
+      }
+    },
+    "versions": {
+      "restoreConfirm": "恢复后当前内容会被替换，当前版本会自动保存进历史。继续吗？",
+      "overline": "版本历史",
+      "title": "想改之前先存一版",
+      "count": "已有 {n} 个快照",
+      "empty": "还没有快照，随时点开保存一份",
+      "hide": "收起 −",
+      "show": "展开 +",
+      "labelPlaceholder": "版本标签（可选，如「投前端版」）",
+      "saving": "保存中…",
+      "save": "保存为版本",
+      "hint": "保存后这里会列出所有快照。点「恢复」把内容回到那个时间点——恢复前当前内容会自动存一份，所以随时可以撤回来。",
+      "untitled": "未命名快照",
+      "restoring": "恢复中…",
+      "restore": "恢复"
+    }
   }
 }

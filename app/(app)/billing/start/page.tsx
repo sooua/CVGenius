@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/db/client";
 import { users } from "@/db/schema/users";
 import { verifySession } from "@/lib/auth/dal";
@@ -11,6 +12,7 @@ export default async function BillingStartPage({
 }: {
   searchParams: Promise<{ canceled?: string }>;
 }) {
+  const t = await getTranslations("billing");
   const { userId } = await verifySession();
   const sp = await searchParams;
 
@@ -22,18 +24,18 @@ export default async function BillingStartPage({
   if (user?.plan === "pro") {
     return (
       <div className="mx-auto max-w-xl py-6">
-        <p className="overline mb-5">已是专业版</p>
+        <p className="overline mb-5">{t("alreadyPro.overline")}</p>
         <h1 className="font-serif text-[30px] leading-tight text-near-black mb-3">
-          你已经是 Pro 用户
+          {t("alreadyPro.title")}
         </h1>
         <p className="text-[14px] text-olive-gray leading-relaxed mb-8">
-          不限次 AI 改写 / 体检 / PDF 解析 都已解锁。
+          {t("alreadyPro.desc")}
         </p>
         <Link
           href="/dashboard"
           className="inline-flex rounded-xl bg-terracotta text-ivory px-5 py-2.5 text-[14px] font-medium hover:bg-coral transition"
         >
-          回到 Dashboard
+          {t("backToDashboard")}
         </Link>
       </div>
     );
@@ -41,12 +43,12 @@ export default async function BillingStartPage({
 
   return (
     <div className="mx-auto max-w-xl py-6">
-      <p className="overline mb-5">订阅 · {PRO_PLAN.name}</p>
+      <p className="overline mb-5">{t("overline", { plan: PRO_PLAN.name })}</p>
       <h1 className="font-serif text-[30px] leading-tight text-near-black mb-3">
-        升级到 FirstCV {PRO_PLAN.name}
+        {t("title", { plan: PRO_PLAN.name })}
       </h1>
       <p className="text-[14px] text-olive-gray leading-relaxed mb-8">
-        点击下面的按钮会跳转到 Stripe 结账页。付完回到这里你会看到确认。
+        {t("intro")}
       </p>
 
       <section className="rounded-3xl bg-ivory ring-1 ring-border-warm px-8 py-8 mb-6">
@@ -65,16 +67,16 @@ export default async function BillingStartPage({
           </span>
         </p>
         <ul className="space-y-2 text-[13.5px] text-charcoal-warm leading-relaxed">
-          <li>· 不限次 AI 改写 / 体检</li>
-          <li>· 不限次 PDF 上传解析</li>
-          <li>· 一份内容 · 多岗位版本（克隆已支持）</li>
-          <li>· 优先问题反馈</li>
+          <li>{t("feature.aiUnlimited")}</li>
+          <li>{t("feature.pdfUnlimited")}</li>
+          <li>{t("feature.multiVersion")}</li>
+          <li>{t("feature.prioritySupport")}</li>
         </ul>
       </section>
 
       {sp.canceled ? (
         <p className="text-[13px] text-stone-gray mb-4">
-          上次结账被取消了。随时可以重新开始。
+          {t("canceledNotice")}
         </p>
       ) : null}
 
@@ -83,18 +85,18 @@ export default async function BillingStartPage({
           type="submit"
           className="rounded-xl bg-terracotta text-ivory px-6 py-3 text-[14px] font-medium hover:bg-coral transition"
         >
-          前往结账
+          {t("goToCheckout")}
         </button>
         <Link
           href="/dashboard"
           className="text-[13px] text-stone-gray hover:text-near-black transition"
         >
-          暂不升级
+          {t("notNow")}
         </Link>
       </form>
 
       <p className="mt-8 text-[12px] text-stone-gray leading-relaxed">
-        账户 {user?.email} · 结账由 Stripe 处理，我们不接触你的卡号。
+        {t("accountFooter", { email: user?.email ?? "" })}
       </p>
     </div>
   );

@@ -1,18 +1,20 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { pricingSection } from "@/content/landing/sections";
 
-export function Pricing() {
+export async function Pricing() {
+  const t = await getTranslations("landing");
   return (
     <section id="pricing" className="px-14 py-28 bg-ivory scroll-mt-24">
       <div className="max-w-5xl mx-auto">
         <FadeIn as="header" className="mb-14 max-w-2xl">
-          <span className="overline">{pricingSection.overline}</span>
+          <span className="overline">{t(pricingSection.overline)}</span>
           <h2 className="font-serif text-[30px] md:text-[40px] leading-[1.2] text-near-black mt-5 mb-5">
-            {pricingSection.title}
+            {t(pricingSection.title)}
           </h2>
           <p className="text-[16px] leading-[1.7] text-olive-gray">
-            {pricingSection.subtitle}
+            {t(pricingSection.subtitle)}
           </p>
         </FadeIn>
 
@@ -31,19 +33,19 @@ export function Pricing() {
             >
               <div className="flex items-baseline justify-between gap-4">
                 <h3 className="font-serif text-[22px] text-near-black">
-                  {tier.name}
+                  {t(tier.name)}
                 </h3>
                 <span className="text-[12.5px] text-stone-gray tracking-wide">
-                  {tier.priceUnit}
+                  {t(tier.priceUnit)}
                 </span>
               </div>
 
               <div className="font-serif text-[40px] leading-none text-near-black">
-                {tier.price}
+                {t(tier.price)}
               </div>
 
               <p className="text-[13.5px] text-olive-gray leading-relaxed">
-                {tier.description}
+                {t(tier.description)}
               </p>
 
               <ul className="space-y-2.5 pt-1 flex-1">
@@ -53,7 +55,7 @@ export function Pricing() {
                     className="flex items-start gap-2.5 text-[13.5px] text-charcoal-warm leading-relaxed"
                   >
                     <span className="text-terracotta mt-0.5 shrink-0">·</span>
-                    <span>{f}</span>
+                    <span>{t(f)}</span>
                   </li>
                 ))}
               </ul>
@@ -67,7 +69,7 @@ export function Pricing() {
                     : "bg-near-black text-ivory hover:bg-dark-warm")
                 }
               >
-                {tier.ctaLabel}
+                {t(tier.ctaLabel)}
               </Link>
             </FadeIn>
           ))}

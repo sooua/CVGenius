@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { and, count, desc, eq, max } from "drizzle-orm";
 import { db } from "@/db/client";
 import { aiTasks } from "@/db/schema/aiTasks";
@@ -19,6 +20,7 @@ export default async function ResumePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("editor");
   const resume = await getResume(id);
   if (!resume) notFound();
 
@@ -59,7 +61,7 @@ export default async function ResumePage({
   const crumbTitle =
     content.basicInfo.name ||
     content.basicInfo.headline ||
-    "未命名简历";
+    t("untitled");
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -79,13 +81,13 @@ export default async function ResumePage({
             href="/upload"
             className="rounded-lg bg-warm-sand text-charcoal-warm px-2.5 py-1 text-[12px] hover:bg-border-cream transition"
           >
-            上传
+            {t("nav.upload")}
           </Link>
           <Link
             href="/account"
             className="rounded-lg bg-warm-sand text-charcoal-warm px-2.5 py-1 text-[12px] hover:bg-border-cream transition"
           >
-            账户
+            {t("nav.account")}
           </Link>
         </div>
       </nav>
