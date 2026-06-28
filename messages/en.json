@@ -795,6 +795,21 @@
       "untitled": "Untitled snapshot",
       "restoring": "Restoring…",
       "restore": "Restore"
+    },
+    "history": {
+      "title": "AI history",
+      "subtitle": "Revisit the cover letters and interview prep you generated",
+      "toggleOpen": "Expand +",
+      "toggleClose": "Collapse −",
+      "loading": "Loading…",
+      "empty": "No cover letters or interview prep yet. They show up here once generated.",
+      "badgeCover": "Cover letter",
+      "badgeInterview": "Interview prep",
+      "questionsCount": "{count, plural, one {# question} other {# questions}}",
+      "copy": "Copy",
+      "copied": "Copied",
+      "view": "View",
+      "hide": "Hide"
     }
   }
 }

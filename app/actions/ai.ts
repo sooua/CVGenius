@@ -17,6 +17,7 @@ import { translateResumeToEnglish } from "@/services/ai/translate";
 import { isPaidPlan } from "@/config/plans";
 import { resumeContentSchema } from "@/lib/resume/schema";
 import type { ResumeContent } from "@/lib/resume/schema";
+import { interviewPrepResultSchema } from "@/services/ai/schemas";
 import type {
   CheckupResult,
   InterviewPrepResult,
@@ -313,6 +314,58 @@ export async function generateCoverLetter(input: {
       .where(eq(aiTasks.id, task.id));
     return { ok: false, error: message };
   }
+}
+
+export type AiHistoryItem =
+  | { id: string; kind: "cover"; at: string; text: string }
+  | {
+      id: string;
+      kind: "interview";
+      at: string;
+      questions: InterviewPrepResult["questions"];
+    };
+
+/** Past AI generations worth revisiting (cover letters + interview prep). */
+export async function listResumeAiHistory(
+  resumeId: string,
+): Promise<AiHistoryItem[]> {
+  const { userId } = await verifySession();
+  const rows = await db.query.aiTasks.findMany({
+    where: and(
+      eq(aiTasks.userId, userId),
+      eq(aiTasks.resumeId, resumeId),
+      eq(aiTasks.status, "success"),
+    ),
+    orderBy: [desc(aiTasks.createdAt)],
+    limit: 40,
+  });
+
+  const items: AiHistoryItem[] = [];
+  for (const r of rows) {
+    if (items.length >= 12) break;
+    if (r.taskType === "cover_letter") {
+      const text = (r.outputJson as { text?: unknown } | null)?.text;
+      if (typeof text === "string" && text.trim()) {
+        items.push({
+          id: r.id,
+          kind: "cover",
+          at: r.createdAt.toISOString(),
+          text,
+        });
+      }
+    } else if (r.taskType === "interview_prep") {
+      const parsed = interviewPrepResultSchema.safeParse(r.outputJson);
+      if (parsed.success) {
+        items.push({
+          id: r.id,
+          kind: "interview",
+          at: r.createdAt.toISOString(),
+          questions: parsed.data.questions,
+        });
+      }
+    }
+  }
+  return items;
 }
 
 export type ExpandResponse =

@@ -795,6 +795,21 @@
       "untitled": "未命名快照",
       "restoring": "恢复中…",
       "restore": "恢复"
+    },
+    "history": {
+      "title": "AI 记录",
+      "subtitle": "回看之前生成的求职信和面试题",
+      "toggleOpen": "展开 +",
+      "toggleClose": "收起 −",
+      "loading": "加载中…",
+      "empty": "还没有生成过求职信或面试题。生成后会自动留在这里。",
+      "badgeCover": "求职信",
+      "badgeInterview": "面试题",
+      "questionsCount": "{count} 个问题",
+      "copy": "复制",
+      "copied": "已复制",
+      "view": "查看",
+      "hide": "收起"
     }
   }
 }

@@ -43,9 +43,11 @@ import {
   generateCoverLetter,
   generateHighlights,
   generateInterviewPrep,
+  listResumeAiHistory,
   rewriteHighlight,
   runResumeCheckup,
   runResumeMatch,
+  type AiHistoryItem,
 } from "@/app/actions/ai";
 import { clientEnv } from "@/lib/env";
 import type {
@@ -1103,6 +1105,8 @@ export function ResumeEditor({
       />
 
       <SharePanel resumeId={resumeId} initial={initialShare} />
+
+      <HistoryPanel resumeId={resumeId} />
 
       <VersionsPanel
         resumeId={resumeId}
@@ -2290,6 +2294,166 @@ const LivePreview = dynamic(() => import("./LivePreview"), {
 });
 
 const PREVIEW_DEBOUNCE_MS = 500;
+
+function HistoryPanel({ resumeId }: { resumeId: string }) {
+  const t = useTranslations("editor");
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<AiHistoryItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const toggleOpen = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && items === null && !loading) {
+      setLoading(true);
+      const data = await listResumeAiHistory(resumeId);
+      setItems(data);
+      setLoading(false);
+    }
+  };
+
+  const fmt = (iso: string) =>
+    new Intl.DateTimeFormat(undefined, {
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(iso));
+
+  const copy = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+
+  return (
+    <section className="rounded-3xl bg-ivory ring-1 ring-border-warm px-6 md:px-8 py-6">
+      <button
+        type="button"
+        onClick={toggleOpen}
+        className="w-full flex items-start justify-between gap-4 text-left"
+      >
+        <div>
+          <p className="overline mb-1.5">{t("history.title")}</p>
+          <h2 className="font-serif text-[17px] text-near-black">
+            {t("history.subtitle")}
+          </h2>
+        </div>
+        <span className="text-[12px] text-stone-gray shrink-0 pt-2">
+          {open ? t("history.toggleClose") : t("history.toggleOpen")}
+        </span>
+      </button>
+
+      {open && (
+        <div className="motion-slide-in-soft mt-5">
+          {loading ? (
+            <p className="text-[12.5px] text-stone-gray">
+              {t("history.loading")}
+            </p>
+          ) : !items || items.length === 0 ? (
+            <p className="text-[12.5px] text-stone-gray leading-relaxed">
+              {t("history.empty")}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {items.map((it) => {
+                const isOpen = expanded.has(it.id);
+                return (
+                  <li
+                    key={it.id}
+                    className="rounded-xl bg-white ring-1 ring-border-warm px-4 py-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={
+                            "shrink-0 rounded-md ring-1 px-2 py-0.5 text-[11px] " +
+                            (it.kind === "cover"
+                              ? "bg-terracotta/10 text-terracotta ring-terracotta/20"
+                              : "bg-warm-sand text-charcoal-warm ring-border-warm")
+                          }
+                        >
+                          {it.kind === "cover"
+                            ? t("history.badgeCover")
+                            : t("history.badgeInterview")}
+                        </span>
+                        <span className="text-[12px] text-stone-gray truncate">
+                          {it.kind === "interview"
+                            ? t("history.questionsCount", {
+                                count: it.questions.length,
+                              })
+                            : it.text.slice(0, 28)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[11.5px] text-stone-gray">
+                          {fmt(it.at)}
+                        </span>
+                        {it.kind === "cover" && (
+                          <button
+                            type="button"
+                            onClick={() => copy(it.id, it.text)}
+                            className="text-[12px] text-terracotta hover:underline"
+                          >
+                            {copiedId === it.id
+                              ? t("history.copied")
+                              : t("history.copy")}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpanded((prev) => {
+                              const n = new Set(prev);
+                              if (n.has(it.id)) n.delete(it.id);
+                              else n.add(it.id);
+                              return n;
+                            })
+                          }
+                          className="text-[12px] text-stone-gray hover:text-near-black"
+                        >
+                          {isOpen ? t("history.hide") : t("history.view")}
+                        </button>
+                      </div>
+                    </div>
+                    {isOpen && (
+                      <div className="mt-3 pt-3 border-t border-border-warm">
+                        {it.kind === "cover" ? (
+                          <pre className="font-serif text-[13px] leading-[1.8] text-near-black whitespace-pre-wrap break-words">
+                            {it.text}
+                          </pre>
+                        ) : (
+                          <ul className="space-y-2">
+                            {it.questions.map((q, i) => (
+                              <li key={i}>
+                                <p className="text-[13px] text-near-black leading-snug">
+                                  {q.question}
+                                </p>
+                                <p className="text-[12px] text-olive-gray leading-relaxed mt-0.5">
+                                  {q.tip}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function TemplatePanel({
   resumeId,
