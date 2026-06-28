@@ -65,6 +65,20 @@ CREATE POLICY resume_versions_owner_all ON public.resume_versions
     )
   );
 
+-- ─── resume_share_views ──────────────────────────────────────────────────
+-- Owner can read their resumes' view rows. Inserts come from the server
+-- (postgres role, bypasses RLS) when a public link is opened.
+ALTER TABLE public.resume_share_views ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS resume_share_views_owner_select ON public.resume_share_views;
+CREATE POLICY resume_share_views_owner_select ON public.resume_share_views
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.resumes r
+      WHERE r.id = resume_share_views.resume_id AND r.user_id = auth.uid()
+    )
+  );
+
 -- ─── job_targets ─────────────────────────────────────────────────────────
 ALTER TABLE public.job_targets ENABLE ROW LEVEL SECURITY;
 

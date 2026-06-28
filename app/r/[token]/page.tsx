@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { resumes } from "@/db/schema/resumes";
+import { resumes, resumeShareViews } from "@/db/schema/resumes";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { hashPasscode, isShareLive, shareCookieName } from "@/lib/share";
 import { env } from "@/lib/env.server";
@@ -102,6 +102,13 @@ export default async function SharePage({
         </Shell>
       );
     }
+  }
+
+  // Gate cleared — record the view (best-effort; never block rendering).
+  try {
+    await db.insert(resumeShareViews).values({ resumeId: resume.id });
+  } catch {
+    /* analytics is non-critical */
   }
 
   const content = parseResumeContent(resume.currentVersionJson);

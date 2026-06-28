@@ -63,6 +63,18 @@ export const resumeVersions = pgTable("resume_versions", {
     .defaultNow(),
 });
 
+/** One row per open of a public share link (privacy-light — no PII). */
+export const resumeShareViews = pgTable("resume_share_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  resumeId: uuid("resume_id")
+    .notNull()
+    .references(() => resumes.id, { onDelete: "cascade" }),
+  viewedAt: timestamp("viewed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type Resume = typeof resumes.$inferSelect;
 export type NewResume = typeof resumes.$inferInsert;
 export type ResumeVersion = typeof resumeVersions.$inferSelect;
+export type ResumeShareView = typeof resumeShareViews.$inferSelect;

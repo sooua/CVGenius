@@ -121,6 +121,8 @@ type ShareSnapshot = {
   token: string | null;
   expiresAt: string | null;
   hasPasscode: boolean;
+  viewCount: number;
+  lastViewedAt: string | null;
 };
 
 type VersionSummary = {
@@ -2465,12 +2467,13 @@ function SharePanel({
     startTransition(async () => {
       const res = await setShareEnabled(resumeId, enabled, options);
       if (res.ok) {
-        setState({
+        setState((prev) => ({
+          ...prev,
           enabled,
-          token: res.token ?? state.token,
+          token: res.token ?? prev.token,
           expiresAt: res.expiresAt,
           hasPasscode: res.hasPasscode,
-        });
+        }));
         setPasscode("");
       } else {
         setError(res.error);
@@ -2566,6 +2569,16 @@ function SharePanel({
             ) : (
               <span className="text-stone-gray">无访问码</span>
             )}
+            <span className="text-border-cream">·</span>
+            <span className="text-stone-gray">
+              {state.viewCount > 0
+                ? `被查看 ${state.viewCount} 次${
+                    state.lastViewedAt
+                      ? ` · 最近 ${formatExpiry(state.lastViewedAt)}`
+                      : ""
+                  }`
+                : "还没有人查看"}
+            </span>
           </div>
 
           <ShareSettings

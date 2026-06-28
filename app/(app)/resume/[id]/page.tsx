@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, max } from "drizzle-orm";
 import { db } from "@/db/client";
 import { aiTasks } from "@/db/schema/aiTasks";
+import { resumeShareViews } from "@/db/schema/resumes";
 import { getResume, listResumeVersions } from "@/app/actions/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { getAiQuotaSnapshot } from "@/lib/ai/quota";
@@ -42,6 +43,11 @@ export default async function ResumePage({
     parsed?.success && latest
       ? { data: parsed.data, at: latest.createdAt.toISOString() }
       : null;
+
+  const [viewStats] = await db
+    .select({ c: count(), last: max(resumeShareViews.viewedAt) })
+    .from(resumeShareViews)
+    .where(eq(resumeShareViews.resumeId, resume.id));
 
   const versionRows = await listResumeVersions(resume.id);
   const initialVersions = versionRows.map((v) => ({
@@ -97,6 +103,8 @@ export default async function ResumePage({
             ? resume.shareExpiresAt.toISOString()
             : null,
           hasPasscode: resume.sharePasscode !== null,
+          viewCount: Number(viewStats?.c ?? 0),
+          lastViewedAt: viewStats?.last ? viewStats.last.toISOString() : null,
         }}
         initialVersions={initialVersions}
       />
