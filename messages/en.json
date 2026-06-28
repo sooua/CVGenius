@@ -2,7 +2,8 @@
   "nav": {
     "brand": "FirstCV",
     "accountTitle": "Account settings",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "applications": "Applications"
   },
   "login": {
     "metaTitle": "Sign in",
@@ -810,6 +811,39 @@
       "copied": "Copied",
       "view": "View",
       "hide": "Hide"
+    }
+  },
+  "applications": {
+    "metaTitle": "Applications",
+    "backToDashboard": "Back to Dashboard",
+    "overline": "Application tracker",
+    "title": "Jobs you have applied to",
+    "intro": "Track which companies you applied to, which resume you used, and where each one stands.",
+    "add": "Add one",
+    "addTitle": "Add an application",
+    "empty": "Nothing tracked yet. Click \"Add one\" to start tracking your applications.",
+    "count": "{count, plural, one {# entry} other {# entries}}",
+    "field": {
+      "company": "Company",
+      "role": "Role",
+      "url": "Job link",
+      "resume": "Resume used",
+      "notes": "Notes"
+    },
+    "resumeNone": "Not linked",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Confirm delete",
+    "openLink": "Open link ↗",
+    "status": {
+      "saved": "Saved",
+      "applied": "Applied",
+      "interviewing": "Interviewing",
+      "offer": "Offer",
+      "rejected": "Rejected"
     }
   }
 }

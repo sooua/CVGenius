@@ -7,6 +7,7 @@ const PROTECTED_PREFIXES = [
   "/account",
   "/upload",
   "/billing",
+  "/applications",
 ];
 const AUTH_ONLY_PATHS = ["/login"];
 

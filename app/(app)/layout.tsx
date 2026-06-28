@@ -24,6 +24,12 @@ export default async function AppLayout({
 
         <div className="flex items-center gap-3 md:gap-5 text-[13px] min-w-0">
           <Link
+            href="/applications"
+            className="text-olive-gray hover:text-near-black transition hidden sm:inline"
+          >
+            {t("applications")}
+          </Link>
+          <Link
             href="/account"
             className="text-olive-gray hover:text-near-black transition hidden sm:inline truncate max-w-[180px]"
             title={t("accountTitle")}
