@@ -98,9 +98,9 @@ export default async function DashboardPage() {
             </p>
             <p className="text-[13.5px] text-olive-gray max-w-md mx-auto leading-relaxed mb-6">
               从示例开始最快——我们预填了一份完整的应届生简历，照着改就行；
-              或者点「新建简历」从空白开始。
+              已有简历就上传，AI 帮你结构化；也可以从空白开始。
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-9">
               <form action={createExampleResume}>
                 <button
                   type="submit"
@@ -109,6 +109,12 @@ export default async function DashboardPage() {
                   从示例开始
                 </button>
               </form>
+              <Link
+                href="/upload"
+                className="rounded-xl bg-warm-sand text-charcoal-warm px-5 py-2.5 text-[13px] hover:bg-border-cream transition"
+              >
+                上传 PDF / Word
+              </Link>
               <form action={createResume}>
                 <button
                   type="submit"
@@ -117,6 +123,28 @@ export default async function DashboardPage() {
                   从空白开始
                 </button>
               </form>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto text-left">
+              {[
+                ["1", "填经历", "用大白话写，✨ 一键扩成专业亮点"],
+                ["2", "做体检", "AI 按 5 个维度打分，照着改"],
+                ["3", "导出", "选模板、实时预览，中英双语 PDF"],
+              ].map(([n, title, desc]) => (
+                <div
+                  key={n}
+                  className="rounded-2xl bg-parchment ring-1 ring-border-warm px-4 py-3.5"
+                >
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-terracotta/10 text-terracotta text-[12px] font-medium mb-2">
+                    {n}
+                  </span>
+                  <p className="font-serif text-[14px] text-near-black mb-0.5">
+                    {title}
+                  </p>
+                  <p className="text-[12px] text-stone-gray leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         ) : (

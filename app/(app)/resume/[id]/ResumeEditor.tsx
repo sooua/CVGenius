@@ -586,6 +586,8 @@ export function ResumeEditor({
         </div>
       </header>
 
+      <FirstRunGuide />
+
       <Section title="目标岗位">
         <TargetRolePicker
           value={watch("targetRole") ?? ""}
@@ -1139,6 +1141,56 @@ export function ResumeEditor({
 function dateRange(start?: string, end?: string) {
   if (!start && !end) return "";
   return `${start ?? ""} – ${end ?? ""}`.trim();
+}
+
+const GUIDE_DISMISS_KEY = "firstcv-editor-guide-dismissed";
+
+function FirstRunGuide() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    let dismissed = true;
+    try {
+      dismissed = !!localStorage.getItem(GUIDE_DISMISS_KEY);
+    } catch {
+      /* storage blocked — just don't show */
+    }
+    if (dismissed) return;
+    const t = setTimeout(() => setShow(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!show) return null;
+
+  const dismiss = () => {
+    try {
+      localStorage.setItem(GUIDE_DISMISS_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    setShow(false);
+  };
+
+  return (
+    <div className="motion-slide-in-soft rounded-2xl bg-ivory ring-1 ring-border-warm px-5 py-4 flex items-start gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="overline mb-1.5">新手提示</p>
+        <p className="text-[13px] text-olive-gray leading-relaxed">
+          不知道经历怎么写？在亮点区用大白话写一句，点{" "}
+          <span className="text-terracotta">✨ 生成</span>{" "}
+          让 AI 扩成专业亮点；写完点顶部「体检」看评分、「面试题」提前准备；在下面「外观」里选模板、开「实时预览」边改边看，最后导出
+          PDF。
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={dismiss}
+        className="shrink-0 rounded-lg bg-warm-sand text-charcoal-warm px-3 py-1.5 text-[12px] hover:bg-border-cream transition"
+      >
+        知道了
+      </button>
+    </div>
+  );
 }
 
 function HighlightsEditor({
