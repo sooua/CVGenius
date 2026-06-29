@@ -4,6 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { jobTargets } from "@/db/schema/jobTargets";
+import { resumes } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { normalizeStatus } from "@/lib/applications";
 
@@ -13,6 +14,19 @@ export async function listJobTargets() {
     where: eq(jobTargets.userId, userId),
     orderBy: [desc(jobTargets.updatedAt)],
   });
+}
+
+/** Returns the id only if that resume belongs to the user, else null. */
+async function ownedResumeId(
+  userId: string,
+  resumeId: string | null | undefined,
+): Promise<string | null> {
+  if (!resumeId) return null;
+  const owned = await db.query.resumes.findFirst({
+    where: and(eq(resumes.id, resumeId), eq(resumes.userId, userId)),
+    columns: { id: true },
+  });
+  return owned ? resumeId : null;
 }
 
 export async function createJobTarget(input: {
@@ -40,7 +54,7 @@ export async function createJobTarget(input: {
       status,
       appliedAt: status === "saved" ? null : new Date(),
       notes: input.notes?.trim() || null,
-      resumeId: input.resumeId ?? null,
+      resumeId: await ownedResumeId(userId, input.resumeId),
     })
     .returning({ id: jobTargets.id });
   revalidatePath("/applications");
@@ -64,7 +78,9 @@ export async function updateJobTarget(
   if ("role" in patch) set.role = patch.role?.trim() || null;
   if ("jobUrl" in patch) set.jobUrl = patch.jobUrl?.trim() || null;
   if ("notes" in patch) set.notes = patch.notes?.trim() || null;
-  if ("resumeId" in patch) set.resumeId = patch.resumeId ?? null;
+  if ("resumeId" in patch) {
+    set.resumeId = await ownedResumeId(userId, patch.resumeId);
+  }
   if ("status" in patch) {
     const status = normalizeStatus(patch.status);
     set.status = status;

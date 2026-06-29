@@ -2491,23 +2491,28 @@ function TemplatePanel({
     return () => clearTimeout(timer);
   }, [liveContent, previewOpen]);
 
-  // Page-count check (one-page discipline) — runs when the preview is open and
-  // the settled content/template/order changes.
+  // Page-count check (one-page discipline). Rendering a PDF server-side just to
+  // count pages is expensive, so we DON'T re-run it on every keystroke — only
+  // when the preview opens, the template/order changes, or the user asks.
+  // Latest content is read from a ref so those triggers don't depend on it.
   const [pages, setPages] = useState<number | null>(null);
+  const contentRef = useRef(debounced);
   useEffect(() => {
-    if (!previewOpen) return;
-    let cancelled = false;
-    getResumePageCount({
-      content: debounced,
+    contentRef.current = debounced;
+  }, [debounced]);
+
+  const checkPages = useCallback(async () => {
+    const res = await getResumePageCount({
+      content: contentRef.current,
       template,
       sectionOrder: order,
-    }).then((res) => {
-      if (!cancelled) setPages("pages" in res ? res.pages : null);
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [previewOpen, debounced, template, order]);
+    setPages("pages" in res ? res.pages : null);
+  }, [template, order]);
+
+  useEffect(() => {
+    if (previewOpen) checkPages();
+  }, [previewOpen, checkPages]);
 
   const choose = (id: TemplateId) => {
     if (id === template) return;
@@ -2621,16 +2626,24 @@ function TemplatePanel({
             template={template}
             sectionOrder={order}
           />
-          {pages !== null && pages > 1 && (
-            <p className="mt-2 rounded-lg bg-error/5 ring-1 ring-error/20 px-3 py-2 text-[12px] text-error">
-              {t("pageCount.over", { pages })}
-            </p>
-          )}
-          {pages === 1 && (
-            <p className="mt-2 text-[12px] text-olive-gray">
-              {t("pageCount.ok")}
-            </p>
-          )}
+          <div className="mt-2 flex items-center gap-2">
+            {pages !== null && pages > 1 ? (
+              <span className="rounded-lg bg-error/5 ring-1 ring-error/20 px-3 py-1.5 text-[12px] text-error">
+                {t("pageCount.over", { pages })}
+              </span>
+            ) : pages === 1 ? (
+              <span className="text-[12px] text-olive-gray">
+                {t("pageCount.ok")}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => checkPages()}
+              className="text-[12px] text-stone-gray hover:text-near-black transition"
+            >
+              {t("pageCount.recheck")}
+            </button>
+          </div>
           <div className="mt-2 flex items-center justify-between gap-3">
             <p className="text-[12px] text-stone-gray">
               {t("template.previewNote")}

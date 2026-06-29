@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { orders } from "@/db/schema/orders";
 import { users } from "@/db/schema/users";
-import { resolvePaymentProvider } from "@/services/payment";
+import { resolvePaymentProvider, type WebhookEvent } from "@/services/payment";
 import { logError } from "@/lib/log";
 
 // Webhook must run on Node runtime so Stripe.Event verification + DB writes work.
@@ -35,11 +35,7 @@ export async function POST(req: Request) {
   return NextResponse.json({ received: true });
 }
 
-async function handleEvent(event: Awaited<
-  ReturnType<
-    ReturnType<typeof resolvePaymentProvider>["verifyAndParseWebhook"]
-  >
->) {
+async function handleEvent(event: WebhookEvent) {
   switch (event.kind) {
     case "checkout_paid": {
       if (!event.orderId) break;
