@@ -37,7 +37,7 @@ export const aiTasks = pgTable("ai_tasks", {
 
   tokensInput: integer("tokens_input"),
   tokensOutput: integer("tokens_output"),
-  costCny: integer("cost_cny_cents"),
+  costCnyMilli: integer("cost_cny_milli"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

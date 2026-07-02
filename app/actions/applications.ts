@@ -16,17 +16,22 @@ export async function listJobTargets() {
   });
 }
 
-/** Returns the id only if that resume belongs to the user, else null. */
-async function ownedResumeId(
+/**
+ * Resolves the resumeId to persist. Distinguishes "not linked" (id null) from
+ * "linked to a resume the user doesn't own" (error) so we don't silently drop
+ * a caller's selection.
+ */
+async function resolveResumeId(
   userId: string,
   resumeId: string | null | undefined,
-): Promise<string | null> {
-  if (!resumeId) return null;
+): Promise<{ ok: true; id: string | null } | { ok: false; error: string }> {
+  if (!resumeId) return { ok: true, id: null };
   const owned = await db.query.resumes.findFirst({
     where: and(eq(resumes.id, resumeId), eq(resumes.userId, userId)),
     columns: { id: true },
   });
-  return owned ? resumeId : null;
+  if (!owned) return { ok: false, error: "简历不存在或无权使用" };
+  return { ok: true, id: resumeId };
 }
 
 export async function createJobTarget(input: {
@@ -44,6 +49,8 @@ export async function createJobTarget(input: {
     return { ok: false, error: "至少填公司或岗位" };
   }
   const status = normalizeStatus(input.status);
+  const resolved = await resolveResumeId(userId, input.resumeId);
+  if (!resolved.ok) return resolved;
   const [created] = await db
     .insert(jobTargets)
     .values({
@@ -54,7 +61,7 @@ export async function createJobTarget(input: {
       status,
       appliedAt: status === "saved" ? null : new Date(),
       notes: input.notes?.trim() || null,
-      resumeId: await ownedResumeId(userId, input.resumeId),
+      resumeId: resolved.id,
     })
     .returning({ id: jobTargets.id });
   revalidatePath("/applications");
@@ -79,7 +86,9 @@ export async function updateJobTarget(
   if ("jobUrl" in patch) set.jobUrl = patch.jobUrl?.trim() || null;
   if ("notes" in patch) set.notes = patch.notes?.trim() || null;
   if ("resumeId" in patch) {
-    set.resumeId = await ownedResumeId(userId, patch.resumeId);
+    const resolved = await resolveResumeId(userId, patch.resumeId);
+    if (!resolved.ok) return resolved;
+    set.resumeId = resolved.id;
   }
   if ("status" in patch) {
     const status = normalizeStatus(patch.status);

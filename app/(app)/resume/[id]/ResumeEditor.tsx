@@ -2501,12 +2501,21 @@ function TemplatePanel({
     contentRef.current = debounced;
   }, [debounced]);
 
+  // Guard against out-of-order responses: rapid template switches (or the
+  // manual re-check button) can fire several requests, and a slow earlier one
+  // must not overwrite a newer result. Only the latest request wins; the
+  // unmount cleanup bumps the counter so a pending response is discarded.
+  const reqIdRef = useRef(0);
+  useEffect(() => () => void reqIdRef.current++, []);
+
   const checkPages = useCallback(async () => {
+    const reqId = ++reqIdRef.current;
     const res = await getResumePageCount({
       content: contentRef.current,
       template,
       sectionOrder: order,
     });
+    if (reqId !== reqIdRef.current) return;
     setPages("pages" in res ? res.pages : null);
   }, [template, order]);
 

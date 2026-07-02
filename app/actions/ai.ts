@@ -7,7 +7,7 @@ import { resumes } from "@/db/schema/resumes";
 import { verifySession } from "@/lib/auth/dal";
 import { parseResumeContent } from "@/lib/resume/schema";
 import { getUserPlan, reserveAiTask } from "@/lib/ai/quota";
-import { estimateCostCents } from "@/lib/ai/cost";
+import { estimateCostMilli } from "@/lib/ai/cost";
 import { rewriteBlock } from "@/services/ai/rewrite";
 import { expandHighlights } from "@/services/ai/expand";
 import { runCheckup } from "@/services/ai/checkup";
@@ -83,7 +83,7 @@ export async function rewriteHighlight(input: {
         outputJson: result.block,
         tokensInput: result.tokensInput,
         tokensOutput: result.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           result.modelId,
           result.tokensInput,
           result.tokensOutput,
@@ -151,7 +151,7 @@ export async function runResumeCheckup(
         outputJson: run.result,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
@@ -230,7 +230,7 @@ export async function runResumeMatch(input: {
         outputJson: run.result,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
@@ -313,7 +313,7 @@ export async function generateCoverLetter(input: {
         outputJson: { text: run.text },
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
@@ -444,7 +444,7 @@ export async function generateHighlights(input: {
         outputJson: run.result,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
@@ -516,7 +516,7 @@ export async function generateInterviewPrep(input: {
         outputJson: run.result,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
@@ -605,7 +605,7 @@ export async function getOrGenerateEnglishVersion(input: {
         outputJson: run.content,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,

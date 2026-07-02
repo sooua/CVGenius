@@ -47,20 +47,26 @@ async function handleEvent(event: WebhookEvent) {
       // we've already marked paid so downstream side effects run once.
       if (order.status === "paid") break;
 
-      await db
-        .update(orders)
-        .set({
-          status: "paid",
-          paidAt: event.paidAt ?? new Date(),
-          providerMetadata: event.raw as object,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, order.id));
+      // Mark-paid and upgrade-to-pro must be atomic: if the second write failed
+      // on its own, we'd return 500, Stripe would retry, and the idempotency
+      // guard above would short-circuit — leaving a paid order with a free user.
+      // A transaction rolls both back together so the retry re-applies both.
+      await db.transaction(async (tx) => {
+        await tx
+          .update(orders)
+          .set({
+            status: "paid",
+            paidAt: event.paidAt ?? new Date(),
+            providerMetadata: event.raw as object,
+            updatedAt: new Date(),
+          })
+          .where(eq(orders.id, order.id));
 
-      await db
-        .update(users)
-        .set({ plan: "pro", updatedAt: new Date() })
-        .where(eq(users.id, order.userId));
+        await tx
+          .update(users)
+          .set({ plan: "pro", updatedAt: new Date() })
+          .where(eq(users.id, order.userId));
+      });
       break;
     }
 

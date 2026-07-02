@@ -14,7 +14,7 @@ import {
   reserveAiTask,
 } from "@/lib/ai/quota";
 import { parseResumeFromText } from "@/services/ai/parse";
-import { estimateCostCents } from "@/lib/ai/cost";
+import { estimateCostMilli } from "@/lib/ai/cost";
 import { resolveOcrProvider } from "@/services/ocr";
 import { ocrPdfPages } from "@/services/ocr/pdf";
 
@@ -212,7 +212,7 @@ async function createResumeFromText(opts: {
         outputJson: run.content,
         tokensInput: run.tokensInput,
         tokensOutput: run.tokensOutput,
-        costCny: estimateCostCents(
+        costCnyMilli: estimateCostMilli(
           run.modelId,
           run.tokensInput,
           run.tokensOutput,
