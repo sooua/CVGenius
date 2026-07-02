@@ -11,7 +11,7 @@ export async function Nav() {
             札
           </span>
           <span className="font-serif text-lg md:text-xl text-near-black">
-            FirstCV
+            CVGenius
           </span>
           <span className="hidden sm:inline text-sm text-stone-gray">
             · {t("nav.brandNote")}

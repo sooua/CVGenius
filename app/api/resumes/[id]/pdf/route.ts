@@ -67,7 +67,7 @@ function buildFilename(
   lang: "zh" | "en",
 ): { ascii: string; unicode: string } {
   const stem = name.trim() || (lang === "en" ? "resume" : "resume");
-  const suffix = lang === "en" ? "-FirstCV-en.pdf" : "-FirstCV.pdf";
+  const suffix = lang === "en" ? "-CVGenius-en.pdf" : "-CVGenius.pdf";
   const unicode = `${stem}${suffix}`;
   const ascii = /[^\x20-\x7e]/.test(stem)
     ? `resume${suffix}`

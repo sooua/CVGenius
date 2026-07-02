@@ -1,13 +1,13 @@
 {
   "nav": {
-    "brand": "FirstCV",
+    "brand": "CVGenius",
     "accountTitle": "Account settings",
     "signOut": "Sign out",
     "applications": "Applications"
   },
   "login": {
     "metaTitle": "Sign in",
-    "brand": "FirstCV",
+    "brand": "CVGenius",
     "overline": "Magic link · passwordless",
     "title": "Start with your email",
     "intro": "We'll send a sign-in link to your inbox — one click and you're in. No password to remember.",
@@ -17,7 +17,7 @@
     "send": "Send sign-in link",
     "sending": "Sending…",
     "sentTitle": "Sign-in link sent",
-    "sentBody": "Check <b>{email}</b> and click the link to enter FirstCV. It's valid for 1 hour.",
+    "sentBody": "Check <b>{email}</b> and click the link to enter CVGenius. It's valid for 1 hour.",
     "resend": "Didn't get it? Resend",
     "resendIn": "Resend in {seconds}s",
     "resending": "Resending…",
@@ -242,7 +242,7 @@
     },
     "backToDashboard": "Back to Dashboard",
     "overline": "Subscription · {plan}",
-    "title": "Upgrade to FirstCV {plan}",
+    "title": "Upgrade to CVGenius {plan}",
     "intro": "Clicking the button below takes you to Stripe checkout. Once you've paid, come back here and you'll see the confirmation.",
     "feature": {
       "aiUnlimited": "· Unlimited AI rewrites & checkups",
@@ -257,7 +257,7 @@
     "success": {
       "overlineDone": "Upgrade complete",
       "overlinePending": "Payment processing",
-      "titleDone": "Thanks for supporting FirstCV",
+      "titleDone": "Thanks for supporting CVGenius",
       "titlePending": "Payment submitted, awaiting confirmation",
       "descDone": "Your Pro features are unlocked—unlimited AI rewrites, checkups, and upload parsing. Now you can polish every resume you have to perfection.",
       "descPending": "Stripe just finished checkout, and we're receiving confirmation via webhook. Your account usually upgrades within a few seconds. If nothing changes after a minute, reach out to us.",
@@ -293,7 +293,7 @@
     },
     "untitled": "Untitled resume",
     "header": {
-      "overline": "FirstCV · Shared resume",
+      "overline": "CVGenius · Shared resume",
       "openNewTab": "Open in new tab"
     },
     "iframeTitle": "{name} · Resume PDF"
@@ -339,7 +339,7 @@
     },
     "product": {
       "overline": "What we do",
-      "title": "FirstCV does just three things",
+      "title": "CVGenius does just three things",
       "subtitle": "Not a template library, not a free-form generator, and we won't tell your story for you—we just help you explain your experience clearly.",
       "feature": {
         "write": {

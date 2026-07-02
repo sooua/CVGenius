@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# FirstCV · Claude Code 项目指南
+# CVGenius · Claude Code 项目指南
 
 ## 项目一句话
 面向应届生的 AI 简历助手：把课程项目、毕业设计、校园经历，用职业语言说清楚。

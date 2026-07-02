@@ -4,7 +4,7 @@ import type { LanguageModel } from "ai";
 import { env } from "@/lib/env.server";
 
 /**
- * FirstCV's AI providers are provider-agnostic: call pickModel() with a
+ * CVGenius's AI providers are provider-agnostic: call pickModel() with a
  * task-tier hint and we return the right LanguageModel instance.
  *
  * Tiers:

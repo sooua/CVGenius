@@ -25,7 +25,7 @@ function assertStripe(): Stripe {
 }
 
 function productNameFor(plan: CheckoutInput["plan"]): string {
-  return plan === "monthly" ? "FirstCV Monthly" : "FirstCV Single Export";
+  return plan === "monthly" ? "CVGenius Monthly" : "CVGenius Single Export";
 }
 
 export const stripeProvider: PaymentProvider = {

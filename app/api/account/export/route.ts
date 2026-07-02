@@ -65,7 +65,7 @@ export async function GET() {
   };
 
   const json = JSON.stringify(payload, null, 2);
-  const filename = `firstcv-data-${new Date().toISOString().slice(0, 10)}.json`;
+  const filename = `cvgenius-data-${new Date().toISOString().slice(0, 10)}.json`;
 
   return new NextResponse(json, {
     headers: {

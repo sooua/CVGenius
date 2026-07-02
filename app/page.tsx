@@ -20,7 +20,7 @@ export default async function HomePage() {
         <div className="flex items-center gap-2.5">
           <span className="w-5 h-5 rounded-full bg-terracotta" />
           <span className="font-serif text-near-black">
-            FirstCV · {t("footer.brandNote")}
+            CVGenius · {t("footer.brandNote")}
           </span>
           <span className="text-stone-gray pl-3">
             {t("footer.rights", { year: String(new Date().getFullYear()) })}

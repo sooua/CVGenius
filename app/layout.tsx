@@ -20,8 +20,8 @@ const notoSans = Noto_Sans_SC({
 
 export const metadata: Metadata = {
   title: {
-    default: "FirstCV · 写出你的第一份简历",
-    template: "%s · FirstCV",
+    default: "CVGenius · 写出你的第一份简历",
+    template: "%s · CVGenius",
   },
   description:
     "面向应届生与职场新人的 AI 简历助手——把课程项目、毕业设计、校园经历，用职业语言说清楚。",

@@ -1,13 +1,13 @@
 {
   "nav": {
-    "brand": "FirstCV · 札记",
+    "brand": "CVGenius · 札记",
     "accountTitle": "账户设置",
     "signOut": "退出",
     "applications": "投递"
   },
   "login": {
     "metaTitle": "登录",
-    "brand": "FirstCV · 札记",
+    "brand": "CVGenius · 札记",
     "overline": "Magic Link · 一次性登录",
     "title": "先写下你的邮箱",
     "intro": "我们会把登录链接发到你的邮箱，点开就能进来。不用记密码，也不留把柄。",
@@ -17,7 +17,7 @@
     "send": "发送登录链接",
     "sending": "正在发送…",
     "sentTitle": "登录链接已发出",
-    "sentBody": "查收 <b>{email}</b>，点击邮件里的链接即可进入 FirstCV。链接 1 小时内有效。",
+    "sentBody": "查收 <b>{email}</b>，点击邮件里的链接即可进入 CVGenius。链接 1 小时内有效。",
     "resend": "没收到？重新发送",
     "resendIn": "{seconds}s 后可重发",
     "resending": "重新发送中…",
@@ -242,7 +242,7 @@
     },
     "backToDashboard": "回到 Dashboard",
     "overline": "订阅 · {plan}",
-    "title": "升级到 FirstCV {plan}",
+    "title": "升级到 CVGenius {plan}",
     "intro": "点击下面的按钮会跳转到 Stripe 结账页。付完回到这里你会看到确认。",
     "feature": {
       "aiUnlimited": "· 不限次 AI 改写 / 体检",
@@ -257,7 +257,7 @@
     "success": {
       "overlineDone": "升级完成",
       "overlinePending": "付款处理中",
-      "titleDone": "谢谢你支持 FirstCV",
+      "titleDone": "谢谢你支持 CVGenius",
       "titlePending": "付款已提交，正在等确认",
       "descDone": "Pro 版功能已解锁——不限次 AI 改写、体检和上传解析。现在可以把你手里的每一份简历都打磨到位。",
       "descPending": "Stripe 刚完成结账，我们正在通过 webhook 接收确认。一般几秒钟内账户就会升级，如果超过一分钟还没变化，联系我们。",
@@ -293,7 +293,7 @@
     },
     "untitled": "一份简历",
     "header": {
-      "overline": "FirstCV · 分享的简历",
+      "overline": "CVGenius · 分享的简历",
       "openNewTab": "在新标签打开"
     },
     "iframeTitle": "{name} · 简历 PDF"
@@ -339,7 +339,7 @@
     },
     "product": {
       "overline": "我们做什么",
-      "title": "FirstCV 只做三件事",
+      "title": "CVGenius 只做三件事",
       "subtitle": "不是简历模板库，不是自由生成器，不替你讲故事——我们只帮你把经历说清楚。",
       "feature": {
         "write": {

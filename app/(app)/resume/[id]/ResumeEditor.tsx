@@ -1158,7 +1158,7 @@ function dateRange(start?: string, end?: string) {
   return `${start ?? ""} – ${end ?? ""}`.trim();
 }
 
-const GUIDE_DISMISS_KEY = "firstcv-editor-guide-dismissed";
+const GUIDE_DISMISS_KEY = "cvgenius-editor-guide-dismissed";
 
 function FirstRunGuide() {
   const t = useTranslations("editor");
