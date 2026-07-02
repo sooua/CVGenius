@@ -50,4 +50,4 @@ pnpm db:studio      # 可视化看数据
 3. 部署前在 Vercel dashboard 补齐
 
 ## 协作者
-Ryuuzaki1412 和朋友共同开发。远程仓库：https://github.com/Ryuuzaki1412/FirstCV
+Ryuuzaki1412 和朋友共同开发。远程仓库：https://github.com/sooua/CVGenius
